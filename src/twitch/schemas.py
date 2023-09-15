@@ -5,21 +5,20 @@ from schemas import CustomModel, PaginateFields
 
 
 class TwitchUser(CustomModel):
-    user_id: str
+    twitch_user_id: str # twitch_user_id
     login: str
     display_name: str
     type: str
     description: str
-    type: str
     view_count: int
     broadcaster_type: str
-    email: Optional[str]
+    email: Optional[str] = ''
 
 
 class TwitchStream(CustomModel):
     twitch_id: int
     user: TwitchUser
-    game_id: int | str
+    twitch_game_id: int | str
     game_name: str
     stream_title: str
     viewer_count: int
@@ -29,7 +28,12 @@ class TwitchStream(CustomModel):
 class TwitchResponseFromParser(PaginateFields):
     twitch_streams_params: dict
     status: str
-    data: Optional[Any]
+    data: Optional[Any] = None
+
+
+class TwitchGame(CustomModel):
+    game_name: str
+    twitch_game_id: int
 
 
 class TwitchStreamParams(PaginateFields):

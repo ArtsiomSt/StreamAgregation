@@ -7,6 +7,7 @@ from cache import RedisCacheManager
 from core.enums import ObjectStatus
 from db import get_twitch_database
 from db.database_managers import TwitchDatabaseManager
+from db.postgre_managers import TwitchRelationalManager
 from dependecies import get_cache_manager
 from fastapi import APIRouter, Depends
 from schemas import ResponseFromDb
@@ -51,8 +52,11 @@ async def parse_streams(
     twitch_query_params = deepcopy(query_params)
     twitch_query_params["first"] = twitch_query_params.pop("streams_amount")
     streams = list(parser.get_streams(query_params=twitch_query_params))
+    conn = TwitchRelationalManager()
+    await conn.connect_to_database()
     for stream in streams:
-        await db.save_one_stream(stream)
+        await conn.save_one_stream(stream)
+    await conn.close_database_connection()
     await cache.save_to_cache(
         key_for_cache,
         60 * 5,

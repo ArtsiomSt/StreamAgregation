@@ -1,32 +1,13 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from bson import ObjectId
 from exceptions import PaginationException
 from pydantic import BaseModel, Field, model_validator
 
 
-class OID(str):
-    """
-    Class that helps with refactoring id from
-    ObjectID to str while creating instance
-    """
-
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        if v == "":
-            raise TypeError("ObjectId is empty")
-        if not ObjectId.is_valid(v):
-            raise TypeError("ObjectId invalid")
-        return str(v)
-
-
 class CustomModel(BaseModel):
-    id: Optional[OID]
+    id: Optional[int] = None
     created_at: datetime = datetime.utcnow()
 
 
@@ -34,8 +15,9 @@ class PaginateFields(BaseModel):
     paginate_by: Optional[int] = Field(10, gt=-1, le=20)
     page_num: Optional[int] = Field(0, gt=-1)
 
-    @model_validator(mode="before")
-    def validate_pagination(self, values):
+    @model_validator(mode='before')
+    @classmethod
+    def validate_pagination(cls, values):
         paginate_by = values.get("paginate_by", None)
         page_num = values.get("page_num", None)
         if (page_num is None and paginate_by is not None) or (
