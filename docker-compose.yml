@@ -15,6 +15,7 @@ services:
       - env/backends.env
       - env/twitch.env
       - env/broker.env
+      - env/db.env
     networks:
       - botnet
   fastapi_parser:
@@ -31,6 +32,7 @@ services:
       - env/backends.env
       - env/twitch.env
       - env/broker.env
+      - env/db.env
     networks:
       - botnet
   db:

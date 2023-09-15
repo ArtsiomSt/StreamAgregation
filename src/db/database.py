@@ -1,6 +1,9 @@
+from typing import Annotated
+
+from fastapi import Depends
 from db.config import DataBaseConfig
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 
 db_settings = DataBaseConfig()
 
@@ -8,4 +11,14 @@ db_url = f"postgresql://{db_settings.pg_user}:{db_settings.pg_password}@{db_sett
 
 engine = create_engine(db_url, echo=True)
 
-SessionMake = sessionmaker(autoflush=False, expire_on_commit=True, bind=engine)
+SessionMake = sessionmaker(autoflush=False, expire_on_commit=False, bind=engine)
+
+def get_db_session():
+    db = SessionMake()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+DataBase = Annotated[Session, Depends(get_db_session)]
