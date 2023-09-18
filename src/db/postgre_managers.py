@@ -3,23 +3,25 @@ from typing import Any
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import NoResultFound
 
-from db.database import DataBase, get_db_session, SessionMake
-from db.database_managers import TwitchDatabaseManager
+from db.database import SessionMake
 from twitch.schemas import (
     TwitchStream as TwitchStreamScheme,
     TwitchUser as TwitchUserScheme,
     TwitchGame as TwitchGameScheme,
 )
-from twitch.models import TwitchStream, TwitchUser, TwitchGame, Tag
+from twitch.models import TwitchStream, TwitchUser, TwitchGame
 
 
 class TwitchRelationalManager:
     db: Session = None
 
-    async def connect_to_database(self):
-        self.db = SessionMake()
+    async def connect_to_database(self) -> None:
+        try:
+            self.db = SessionMake()
+        finally:
+            self.db.close()
 
-    async def close_database_connection(self):
+    async def close_database_connection(self) -> None:
         self.db.close()
 
     async def get_test_message(self, message: str) -> Any:
@@ -29,7 +31,6 @@ class TwitchRelationalManager:
         twitch_user = await self.save_one_user(stream.user)
         twitch_game = TwitchGameScheme(game_name=stream.game_name, twitch_game_id=stream.twitch_game_id)
         twitch_game = await self.save_one_game(twitch_game)
-        print(stream.tags)
         try:
             current_db_stream = self.db.query(TwitchStream).filter_by(twitch_id=stream.twitch_id).one()
         except NoResultFound:
@@ -51,6 +52,9 @@ class TwitchRelationalManager:
         return stream
 
     async def save_one_game(self, game: TwitchGameScheme) -> TwitchGameScheme:
+        if not game.twitch_game_id or not game.game_name:
+            game.id = None
+            return game
         try:
             current_db_game = self.db.query(TwitchGame).filter_by(twitch_game_id=game.twitch_game_id).one()
         except NoResultFound:
@@ -87,3 +91,7 @@ class TwitchRelationalManager:
             self.db.refresh(twitch_user)
             user.id = twitch_user.id
         return user
+
+    async def get_followed_users(self) -> list[TwitchUserScheme]:
+        twitch_users = self.db.query(TwitchUser).all()
+        return [TwitchUserScheme(**user.__dict__) for user in twitch_users]

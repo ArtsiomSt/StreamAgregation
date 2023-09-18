@@ -10,7 +10,7 @@ class Base(DeclarativeBase):
 class TwitchUser(DefaultFields, Base):
     __tablename__ = "twitch_users"
 
-    twitch_user_id = Column(BigInteger, default=0, index=True)
+    twitch_user_id = Column(BigInteger, default=0, unique=True, nullable=False)
     login = Column(String, nullable=True)
     display_name = Column(String)
     type = Column(String)
@@ -23,7 +23,7 @@ class TwitchUser(DefaultFields, Base):
 class TwitchStream(DefaultFields, Base):
     __tablename__ = "twitch_streams"
 
-    twitch_id = Column(BigInteger, default=0, index=True)
+    twitch_id = Column(BigInteger, unique=True, nullable=False)
     user_id = Column(Integer, ForeignKey("twitch_users.id"), nullable=False)
     game_id = Column(Integer, ForeignKey("twitch_games.id"), nullable=True)
     stream_title = Column(String)
@@ -34,7 +34,7 @@ class TwitchGame(DefaultFields, Base):
     __tablename__ = "twitch_games"
 
     game_name = Column(String, nullable=False)
-    twitch_game_id = Column(BigInteger, nullable=False, index=True)
+    twitch_game_id = Column(BigInteger, nullable=False, unique=True)
 
 
 class Tag(DefaultFields, Base):

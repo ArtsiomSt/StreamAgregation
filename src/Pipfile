@@ -20,6 +20,10 @@ sqlalchemy = "*"
 alembic = "*"
 psycopg2-binary = "*"
 pydantic-settings = "*"
+structlog = "*"
+celery = "*"
+redis = "*"
+asgiref = "*"
 
 [dev-packages]
 
