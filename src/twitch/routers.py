@@ -11,9 +11,10 @@ from db.postgre_managers import TwitchRelationalManager
 from dependecies import get_cache_manager
 from fastapi import APIRouter, Depends
 from schemas import ResponseFromDb
+from worker import create_task
 
 from .config import TwitchSettings
-from .dependencies import get_twitch_parser
+from .dependencies import get_twitch_parser, get_twitch_pdb
 from .schemas import TwitchResponseFromParser, TwitchStreamParams, TwitchUserParams
 from .service import TwitchParser
 
@@ -22,6 +23,7 @@ twitch_router = APIRouter(prefix="/twitch")
 
 TwitchParserObject = Annotated[TwitchParser, Depends(get_twitch_parser)]
 TwitchDb = Annotated[TwitchDatabaseManager, Depends(get_twitch_database)]
+TwitchPdb = Annotated[TwitchRelationalManager, Depends(get_twitch_pdb)]
 CacheMngr = Annotated[RedisCacheManager, Depends(get_cache_manager)]
 settings = TwitchSettings()
 
@@ -29,7 +31,7 @@ settings = TwitchSettings()
 @twitch_router.post("/stream/parse")
 async def parse_streams(
     parser: TwitchParserObject,
-    db: TwitchDb,
+    db: TwitchPdb,
     cache: CacheMngr,
     params: TwitchStreamParams,
 ):
@@ -50,20 +52,15 @@ async def parse_streams(
     if object_from_cache and object_from_cache["status"] == ObjectStatus.PROCESSED.name:
         return {"message": "object is already processed"}
     twitch_query_params = deepcopy(query_params)
-    twitch_query_params["first"] = twitch_query_params.pop("streams_amount")
-    streams = list(parser.get_streams(query_params=twitch_query_params))
-    conn = TwitchRelationalManager()
-    await conn.connect_to_database()
-    for stream in streams:
-        await conn.save_one_stream(stream)
-    await conn.close_database_connection()
+    streams_amount = twitch_query_params.pop("streams_amount")
+    for stream in parser.get_streams(twitch_query_params, streams_amount):
+        await db.save_one_stream(stream)
     await cache.save_to_cache(
         key_for_cache,
         60 * 5,
         TwitchResponseFromParser(
             status=ObjectStatus.PROCESSED.name,
             twitch_streams_params=query_params,
-            data=streams,
         ),
     )
     return {"message": "processed"}
@@ -123,6 +120,13 @@ async def get_parsed_users(db: TwitchDb, params: TwitchUserParams = Depends()):
     )
 
 
+@twitch_router.get("/worker")
+async def test_worker():
+    task_type = 9
+    task = create_task.delay(int(task_type))
+    return {"task_id": task.id}
+
+
 @twitch_router.get("/test")
-async def test_twitch(db: TwitchDb):
+async def test_twitch(db: TwitchPdb):
     return {"message": "success"}

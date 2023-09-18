@@ -35,6 +35,37 @@ services:
       - env/db.env
     networks:
       - botnet
+  celery_beat:
+    build: src
+    command: celery -A worker.celery beat --loglevel=info
+    volumes:
+      - ./src:/app
+    depends_on:
+      - db
+      - kafka
+    env_file:
+      - env/backends.env
+      - env/twitch.env
+      - env/broker.env
+      - env/db.env
+    networks:
+      - botnet
+  celery:
+    build: src
+    command: celery -A worker.celery worker --loglevel=info
+    volumes:
+      - ./src:/app
+    depends_on:
+      - db
+      - fastapi
+      - kafka
+    env_file:
+      - env/backends.env
+      - env/twitch.env
+      - env/broker.env
+      - env/db.env
+    networks:
+      - botnet
   db:
     image: mongo
     ports:

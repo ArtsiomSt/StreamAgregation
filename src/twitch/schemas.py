@@ -1,6 +1,6 @@
 from typing import Any, Optional
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from schemas import CustomModel, PaginateFields
 
 
@@ -14,6 +14,13 @@ class TwitchUser(CustomModel):
     broadcaster_type: str
     email: Optional[str] = ''
 
+    @field_validator("twitch_user_id", mode='before')
+    @classmethod
+    def validate_twitch_user_id(cls, value):
+        if isinstance(value, int):
+            return str(value)
+        else:
+            return value
 
 class TwitchStream(CustomModel):
     twitch_id: int
@@ -33,7 +40,7 @@ class TwitchResponseFromParser(PaginateFields):
 
 class TwitchGame(CustomModel):
     game_name: str
-    twitch_game_id: int
+    twitch_game_id: int | str
 
 
 class TwitchStreamParams(PaginateFields):
