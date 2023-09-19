@@ -2,8 +2,9 @@ from datetime import datetime
 from typing import Any, Optional, Union
 
 from bson import ObjectId
-from exceptions import PaginationException
 from pydantic import BaseModel, Field, model_validator
+
+from exceptions import PaginationException
 
 
 class CustomModel(BaseModel):
@@ -15,7 +16,7 @@ class PaginateFields(BaseModel):
     paginate_by: Optional[int] = Field(10, gt=-1, le=20)
     page_num: Optional[int] = Field(0, gt=-1)
 
-    @model_validator(mode='before')
+    @model_validator(mode="before")
     @classmethod
     def validate_pagination(cls, values):
         paginate_by = values.get("paginate_by", None)

@@ -2,6 +2,8 @@ import json
 from copy import deepcopy
 from typing import Annotated
 
+from fastapi import APIRouter, Depends
+
 from brokers.producer import producer
 from cache import RedisCacheManager
 from core.enums import ObjectStatus
@@ -9,13 +11,13 @@ from db import get_twitch_database
 from db.database_managers import TwitchDatabaseManager
 from db.postgre_managers import TwitchRelationalManager
 from dependecies import get_cache_manager
-from fastapi import APIRouter, Depends
 from schemas import ResponseFromDb
 from worker import create_task
 
 from .config import TwitchSettings
 from .dependencies import get_twitch_parser, get_twitch_pdb
-from .schemas import TwitchResponseFromParser, TwitchStreamParams, TwitchUserParams
+from .schemas import (TwitchResponseFromParser, TwitchStreamParams,
+                      TwitchUserParams)
 from .service import TwitchParser
 
 twitch_router = APIRouter(prefix="/twitch")

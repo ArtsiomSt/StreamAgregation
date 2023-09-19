@@ -1,4 +1,5 @@
 from db.postgre_managers import TwitchRelationalManager
+
 from .service import TwitchParser
 
 twitch_parser = TwitchParser()

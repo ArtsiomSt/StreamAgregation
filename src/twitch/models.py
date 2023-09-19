@@ -1,6 +1,7 @@
-from models import DefaultFields
-from sqlalchemy import Column, ForeignKey, Integer, String, Text, BigInteger
+from sqlalchemy import BigInteger, Column, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase
+
+from models import DefaultFields
 
 
 class Base(DeclarativeBase):
@@ -38,13 +39,13 @@ class TwitchGame(DefaultFields, Base):
 
 
 class Tag(DefaultFields, Base):
-    __tablename__ = 'tags'
+    __tablename__ = "tags"
 
     tag_name = Column(String, nullable=False)
 
 
 class StreamTag(DefaultFields, Base):
-    __tablename__ = 'stream_tag'
+    __tablename__ = "stream_tag"
 
     stream_id = Column(Integer, ForeignKey("twitch_streams.id"))
     tag_id = Column(Integer, ForeignKey("tags.id"))
