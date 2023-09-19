@@ -24,6 +24,8 @@ structlog = "*"
 celery = "*"
 redis = "*"
 asgiref = "*"
+passlib = "*"
+python-jose = "*"
 
 [dev-packages]
 
