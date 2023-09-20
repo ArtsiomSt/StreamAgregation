@@ -6,7 +6,7 @@ from schemas import CustomModel, PaginateFields
 
 
 class TwitchUser(CustomModel):
-    twitch_user_id: str  # twitch_user_id
+    twitch_user_id: int | str  # twitch_user_id
     login: str
     display_name: str
     type: str
@@ -18,8 +18,8 @@ class TwitchUser(CustomModel):
     @field_validator("twitch_user_id", mode="before")
     @classmethod
     def validate_twitch_user_id(cls, value):
-        if isinstance(value, int):
-            return str(value)
+        if isinstance(value, str):
+            return int(value)
         else:
             return value
 
@@ -43,6 +43,14 @@ class TwitchResponseFromParser(PaginateFields):
 class TwitchGame(CustomModel):
     game_name: str
     twitch_game_id: int | str
+
+    @field_validator("twitch_game_id", mode="before")
+    @classmethod
+    def validate_twitch_user_id(cls, value):
+        if value and isinstance(value, str):
+            return int(value)
+        else:
+            return value
 
 
 class TwitchStreamParams(PaginateFields):

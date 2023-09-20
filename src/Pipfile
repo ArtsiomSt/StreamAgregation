@@ -26,6 +26,7 @@ redis = "*"
 asgiref = "*"
 passlib = "*"
 python-jose = "*"
+asyncpg = "*"
 
 [dev-packages]
 
