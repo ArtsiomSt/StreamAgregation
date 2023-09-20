@@ -55,8 +55,10 @@ async def parse_streams(
         return {"message": "object is already processed"}
     twitch_query_params = deepcopy(query_params)
     streams_amount = twitch_query_params.pop("streams_amount")
+    print('start prsing')
     for stream in parser.get_streams(twitch_query_params, streams_amount):
         await db.save_one_stream(stream)
+    print('saved_all')
     await cache.save_to_cache(
         key_for_cache,
         60 * 5,
@@ -125,7 +127,7 @@ async def get_parsed_users(db: TwitchDb, params: TwitchUserParams = Depends()):
 @twitch_router.get("/worker")
 async def test_worker():
     task_type = 9
-    task = create_task.delay(int(task_type))
+    task = create_task.delay()
     return {"task_id": task.id}
 
 
