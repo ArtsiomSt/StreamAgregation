@@ -1,11 +1,19 @@
 from sqlalchemy import BigInteger, Column, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, relationship
 
 from models import DefaultFields
 
 
 class Base(DeclarativeBase):
     pass
+
+
+class UserSubscription(Base):
+    __tablename__ = "user_subscription"
+
+    user_id = Column(BigInteger, ForeignKey("users.id"), primary_key=True)
+    twitch_db_user_id = Column(BigInteger, ForeignKey("twitch_users.id"), primary_key=True)
+    twitch_user_id = Column(BigInteger)
 
 
 class TwitchUser(DefaultFields, Base):
@@ -19,6 +27,8 @@ class TwitchUser(DefaultFields, Base):
     view_count = Column(Integer, default=0)
     email = Column(String, nullable=True)
     broadcaster_type = Column(String)
+
+    subscribers = relationship('auth.models.User', secondary='user_subscription', back_populates='subscriptions')
 
 
 class TwitchStream(DefaultFields, Base):
@@ -49,3 +59,16 @@ class StreamTag(DefaultFields, Base):
 
     stream_id = Column(Integer, ForeignKey("twitch_streams.id"))
     tag_id = Column(Integer, ForeignKey("tags.id"))
+
+
+class Notification(DefaultFields, Base):
+    __tablename__ = 'notifications'
+
+    twitch_stream_id = Column(BigInteger, nullable=False)
+    notification_count = Column(Integer, nullable=True)
+
+class NotificationUser(DefaultFields, Base):
+    __tablename__ = 'notification_user'
+
+    user_id = Column(Integer, ForeignKey("users.id"))
+    notification_id = Column(Integer, ForeignKey('notifications.id'))

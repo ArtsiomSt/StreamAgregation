@@ -27,19 +27,14 @@ def push_db(func):
 
 @celery.task(name="create_task")
 def create_task():
-    response = requests.get('http://fastapi:8000/')
+    response = requests.get('http://fastapi_parser:8001/twitch/worker/')
     return True
 
 
-@celery.task(name="beat_task")
-def beat_task():
-    response = requests.get('http://fastapi:8000/')
-    return True
 
-
-#celery.conf.beat_schedule = {
-#    'chto-to': {
-#        'task': 'worker.create_task',
-#        'schedule': timedelta(seconds=20)
-#    },
-#}
+celery.conf.beat_schedule = {
+    'chto-to': {
+        'task': 'twitch.tasks.beat_task',
+        'schedule': timedelta(seconds=20)
+    },
+}

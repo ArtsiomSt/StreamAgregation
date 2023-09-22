@@ -24,7 +24,7 @@ async def get_auth_pdb() -> AuthRelationalManager:
 UserPdb = Annotated[AuthRelationalManager, Depends(get_auth_pdb)]
 
 
-reusable_oauth = OAuth2PasswordBearer(tokenUrl="/login", scheme_name="JWT")
+reusable_oauth = OAuth2PasswordBearer(tokenUrl="/auth/token", scheme_name="JWT")
 
 
 async def get_current_user(db: UserPdb, token: str = Depends(reusable_oauth)) -> ExtendedUserScheme:
