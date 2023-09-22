@@ -5,8 +5,8 @@ from typing import Any
 from aioredis import Redis
 from pydantic import BaseModel
 
-from config import Settings
-from exceptions import PaginationException
+from .config import Settings
+from .exceptions import PaginationException
 
 settings = Settings()
 

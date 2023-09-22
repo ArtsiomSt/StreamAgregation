@@ -1,4 +1,4 @@
-from cache import RedisCacheManager
+from .cache import RedisCacheManager
 
 cache_manager = RedisCacheManager()
 
