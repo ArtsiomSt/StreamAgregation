@@ -1,8 +1,8 @@
 from sqlalchemy import Column, String
-from sqlalchemy.orm import DeclarativeBase, relationship, Mapped, mapped_column
+from sqlalchemy.orm import relationship
 
 from twitch.models import Base
-from models import DefaultFields
+from application.models import DefaultFields
 
 
 class User(DefaultFields, Base):

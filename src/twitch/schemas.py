@@ -2,7 +2,7 @@ from typing import Any, Optional
 
 from pydantic import Field, field_validator
 
-from schemas import CustomModel, PaginateFields
+from application.schemas import CustomModel, PaginateFields
 
 
 class TwitchUser(CustomModel):

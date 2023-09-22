@@ -1,10 +1,9 @@
 from datetime import datetime
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
-from bson import ObjectId
 from pydantic import BaseModel, Field, model_validator
 
-from exceptions import PaginationException
+from .exceptions import PaginationException
 
 
 class CustomModel(BaseModel):

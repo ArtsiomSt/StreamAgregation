@@ -7,13 +7,13 @@ from fastapi.responses import JSONResponse
 
 from auth.dependencis import CurrentUser
 from brokers.producer import producer
-from cache import RedisCacheManager
+from application.cache import RedisCacheManager
 from core.enums import ObjectStatus
 from db import get_twitch_database
 from db.database_managers import TwitchDatabaseManager
 from db.postgre_managers import TwitchRelationalManager
-from dependecies import get_cache_manager
-from schemas import ResponseFromDb
+from application.dependecies import get_cache_manager
+from application.schemas import ResponseFromDb
 
 from .config import TwitchSettings
 from .dependencies import get_twitch_parser, get_twitch_pdb
@@ -57,10 +57,8 @@ async def parse_streams(
         return {"message": "object is already processed"}
     twitch_query_params = deepcopy(query_params)
     streams_amount = twitch_query_params.pop("streams_amount")
-    print('start prsing')
     for stream in parser.get_streams(twitch_query_params, streams_amount):
         await db.save_one_stream(stream)
-    print('saved_all')
     await cache.save_to_cache(
         key_for_cache,
         60 * 5,

@@ -1,6 +1,6 @@
 from db.postgre_managers import TwitchRelationalManager
 from twitch.service import TwitchParser
-from utils import send_email_notification
+from application.utils import send_email_notification
 
 
 async def get_live_subscribed_streams(db: TwitchRelationalManager, parser: TwitchParser) -> None:

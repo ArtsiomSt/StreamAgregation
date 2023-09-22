@@ -1,7 +1,7 @@
 from sqlalchemy import BigInteger, Column, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase, relationship
 
-from models import DefaultFields
+from application.models import DefaultFields
 
 
 class Base(DeclarativeBase):
