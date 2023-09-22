@@ -2,8 +2,10 @@ import json
 from copy import deepcopy
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
 
+from auth.dependencis import CurrentUser
 from brokers.producer import producer
 from cache import RedisCacheManager
 from core.enums import ObjectStatus
@@ -12,13 +14,13 @@ from db.database_managers import TwitchDatabaseManager
 from db.postgre_managers import TwitchRelationalManager
 from dependecies import get_cache_manager
 from schemas import ResponseFromDb
-from worker import create_task
 
 from .config import TwitchSettings
 from .dependencies import get_twitch_parser, get_twitch_pdb
 from .schemas import (TwitchResponseFromParser, TwitchStreamParams,
                       TwitchUserParams)
 from .service import TwitchParser
+from .tasks import get_live_subscribed_streams
 
 twitch_router = APIRouter(prefix="/twitch")
 
@@ -124,11 +126,19 @@ async def get_parsed_users(db: TwitchDb, params: TwitchUserParams = Depends()):
     )
 
 
-@twitch_router.get("/worker")
-async def test_worker():
-    task_type = 9
-    task = create_task.delay()
-    return {"task_id": task.id}
+@twitch_router.get('/users/subscribe/{twitch_user_id}')
+async def subscribe_to_twitch_user(twitch_user_id: int, db: TwitchPdb, user: CurrentUser):
+    result = await db.subscribe_user_to_streamer(user, twitch_user_id)
+    if result:
+        return JSONResponse({"detail": "subscribed"}, status_code=200)
+    else:
+        raise HTTPException(detail="Unknown error", status_code=500)
+
+
+
+@twitch_router.get("/send_notifications")
+async def send_notifications(db: TwitchPdb, parser: TwitchParserObject):
+    await get_live_subscribed_streams(db, parser)
 
 
 @twitch_router.get("/test")

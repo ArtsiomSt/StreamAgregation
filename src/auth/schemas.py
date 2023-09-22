@@ -1,13 +1,13 @@
 import re
 from typing import Optional
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, EmailStr
 
 
 class UserRegisterScheme(BaseModel):
     id: Optional[int] = None
     username: str
-    email: str
+    email: EmailStr
     first_name: Optional[str] = ""
     last_name: Optional[str] = ""
     password: str
@@ -16,7 +16,7 @@ class UserRegisterScheme(BaseModel):
 class UserScheme(BaseModel):
     id: Optional[int] = None
     username: str
-    email: str
+    email: EmailStr
     first_name: Optional[str] = ""
     last_name: Optional[str] = ""
 
