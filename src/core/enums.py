@@ -23,3 +23,5 @@ class ObjectStatus(BaseEnum):
     PROCESSED = "processed"
     PENDING = "pending"
     CREATED = "created"
+    NOT_EXISTS = "not_exists"
+    BAD_TASK_DATA = "bad_task_data"
