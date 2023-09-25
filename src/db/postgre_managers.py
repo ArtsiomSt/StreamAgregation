@@ -3,6 +3,7 @@ from typing import Any
 from fastapi import HTTPException
 from sqlalchemy import or_, select, and_, insert
 from sqlalchemy.exc import NoResultFound
+from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.exceptions import AuthException
@@ -193,3 +194,20 @@ class TwitchRelationalManager(RelationalManager):
         if len(stream_notification) != 0:
             return True
         return False
+
+    async def get_parsed_streams(self, paginate_by: int = 30, page_num: int = 0) -> list[TwitchStreamScheme]:
+        result = await self.db.execute(
+            select(TwitchStream)
+            .join(TwitchUser, TwitchStream.user_id==TwitchUser.id).options(joinedload(TwitchStream.user))
+            .join(TwitchGame, TwitchStream.game_id==TwitchGame.id).options(joinedload(TwitchStream.game))
+            .offset(page_num).limit(paginate_by))
+        streams = result.scalars().all()
+        return [TwitchStreamScheme(
+            twitch_id=stream.twitch_id,
+            user=TwitchUserScheme(**stream.user.__dict__),
+            twitch_game_id=stream.game.twitch_game_id,
+            game_name=stream.game.game_name,
+            stream_title=stream.stream_title,
+            viewer_count=stream.viewer_count,
+            tags=[]
+        ) for stream in streams]

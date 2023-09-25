@@ -31,19 +31,10 @@ while True:
         message_data: dict = json.loads(msg.value())
         logger_structlog.info("Accepted message for parsing", topic=topic)
         match topic:
-            case "product":
-                params = {"url": message_data.get("url", None)}
-                params.update(message_data.get("params", {}))
-                resp = requests.post(form_url(settings.parse_product_url), json=params)
-                logger_structlog.info("Successfully processed request", topic=topic, url=params['url'])
-            case "category":
-                params = {"url": message_data.get("url", None)}
-                params.update(message_data.get("params", {}))
-                resp = requests.post(form_url(settings.parse_category_url), json=params)
-                logger_structlog.info("Successfully processed request", topic=topic, url=params['url'])
             case "stream":
                 params = {}
                 params.update(message_data.get("twitch_stream_params", {}))
-                resp = requests.post(form_url(settings.parse_streams_url), json=params)
+                task_id = message_data.get('task_id')
+                resp = requests.post(form_url(settings.parse_streams_url+f'/{task_id}'), json=params)
                 logger_structlog.info("Successfully processed request", topic=topic, **params)
         consumer.commit(message=msg)
