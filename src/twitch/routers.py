@@ -1,34 +1,42 @@
 import json
 from copy import deepcopy
 from typing import Annotated
+from uuid import uuid4
 
+from application.cache import RedisCacheManager
+from application.dependecies import get_cache_manager
+from application.schemas import ResponseFromDb
+from auth.dependencis import CurrentUser
 from brokers.producer import producer
-from cache import RedisCacheManager
 from core.enums import ObjectStatus
 from db import get_twitch_database
 from db.database_managers import TwitchDatabaseManager
-from dependecies import get_cache_manager
-from fastapi import APIRouter, Depends
-from schemas import ResponseFromDb
+from db.postgre_managers import TwitchRelationalManager
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
+from pydantic import ValidationError
 
 from .config import TwitchSettings
-from .dependencies import get_twitch_parser
-from .schemas import TwitchResponseFromParser, TwitchStreamParams, TwitchUserParams
+from .dependencies import get_twitch_parser, get_twitch_pdb
+from .schemas import TaskStatus, TwitchStreamParams, TwitchUserParams
 from .service import TwitchParser
+from .tasks import get_live_subscribed_streams
 
 twitch_router = APIRouter(prefix="/twitch")
 
 
 TwitchParserObject = Annotated[TwitchParser, Depends(get_twitch_parser)]
 TwitchDb = Annotated[TwitchDatabaseManager, Depends(get_twitch_database)]
+TwitchPdb = Annotated[TwitchRelationalManager, Depends(get_twitch_pdb)]
 CacheMngr = Annotated[RedisCacheManager, Depends(get_cache_manager)]
 settings = TwitchSettings()
 
 
-@twitch_router.post("/stream/parse")
+@twitch_router.post("/stream/parse/{task_id}", response_model=TaskStatus)
 async def parse_streams(
+    task_id: str,
     parser: TwitchParserObject,
-    db: TwitchDb,
+    db: TwitchPdb,
     cache: CacheMngr,
     params: TwitchStreamParams,
 ):
@@ -44,73 +52,64 @@ async def parse_streams(
     }
     if params.game_id is not None:
         query_params["game_id"] = params.game_id
-    key_for_cache = {"twitch_stream_params": query_params}
-    object_from_cache = await cache.get_object_from_cache(key_for_cache)
-    if object_from_cache and object_from_cache["status"] == ObjectStatus.PROCESSED.name:
-        return {"message": "object is already processed"}
     twitch_query_params = deepcopy(query_params)
-    twitch_query_params["first"] = twitch_query_params.pop("streams_amount")
-    streams = list(parser.get_streams(query_params=twitch_query_params))
-    for stream in streams:
+    streams_amount = twitch_query_params.pop("streams_amount")
+    for stream in parser.get_streams(twitch_query_params, streams_amount):
         await db.save_one_stream(stream)
-    await cache.save_to_cache(
-        key_for_cache,
-        60 * 5,
-        TwitchResponseFromParser(
-            status=ObjectStatus.PROCESSED.name,
-            twitch_streams_params=query_params,
-            data=streams,
-        ),
+    processed_task = TaskStatus(
+        task_id=task_id, task_status=ObjectStatus.PROCESSED.name, result={"streams_parsed": streams_amount}
     )
-    return {"message": "processed"}
+    await cache.save_to_cache(task_id, 60 * 5, processed_task)
+    return processed_task
 
 
-@twitch_router.post("/stream", response_model=TwitchResponseFromParser)
+@twitch_router.post("/stream", response_model=TaskStatus)
 async def get_parsed_streams(params: TwitchStreamParams, cache: CacheMngr):
     """
     This view stands for sending requests for parsing streams
     using kafka, streams are parsed in other application. Kafka sends request
-    for parsing to /parse/stream of another application, that processes request
+    for parsing to /stream of another application, that processes request
     """
 
     query_params = {
         "streams_amount": params.streams_amount,
         "language": params.language,
     }
-    pagination = {"paginate_by": params.paginate_by, "page_num": params.page_num}
     if params.game_id is not None:
         query_params["game_id"] = params.game_id
-    key_for_cache = {"twitch_stream_params": query_params}
-    object_from_cache = await cache.get_object_from_cache(
-        key_for_cache, ["data", "streams"], params.paginate_by, params.page_num
-    )
-    if object_from_cache:
-        object_from_cache.update(pagination)
-        return object_from_cache
+    message_data = {"twitch_stream_params": query_params}
+    task_id = str(uuid4())
     await cache.save_to_cache(
-        key_for_cache,
+        task_id,
         60 * 3,
-        TwitchResponseFromParser(
-            status=ObjectStatus.PENDING.name, twitch_streams_params=query_params
-        ),
+        TaskStatus(task_status=ObjectStatus.PENDING.name, task_id=task_id),
     )
+    message_data["task_id"] = task_id
     producer.produce(
         settings.twitch_stream_topic,
         key="parse_category",
-        value=json.dumps(key_for_cache),
+        value=json.dumps(message_data),
     )
-    return TwitchResponseFromParser(
-        status=ObjectStatus.CREATED.name, twitch_streams_params=query_params, **pagination
-    )
+    return TaskStatus(task_status=ObjectStatus.CREATED.name, task_id=task_id)
+
+
+@twitch_router.get("/task/{task_id}", response_model=TaskStatus)
+async def check_task_status(task_id: str, cache: CacheMngr):
+    response_from_cache = await cache.get_object_from_cache(task_id)
+    if response_from_cache:
+        try:
+            created_task = TaskStatus(**response_from_cache)
+            return created_task
+        except ValidationError:
+            return TaskStatus(task_id=task_id, task_status=ObjectStatus.BAD_TASK_DATA.name)
+    return TaskStatus(task_id=task_id, task_status=ObjectStatus.NOT_EXISTS.name)
 
 
 @twitch_router.get("/user", response_model=ResponseFromDb)
 async def get_parsed_users(db: TwitchDb, params: TwitchUserParams = Depends()):
     """View that stands for getting users from parsed streams from database"""
 
-    users = await db.get_users_by_filter(
-        {}, paginate_by=params.paginate_by, page_num=params.page_num
-    )
+    users = await db.get_users_by_filter({}, paginate_by=params.paginate_by, page_num=params.page_num)
     return ResponseFromDb(
         status=ObjectStatus.PROCESSED.name,
         data=users,
@@ -119,6 +118,26 @@ async def get_parsed_users(db: TwitchDb, params: TwitchUserParams = Depends()):
     )
 
 
+@twitch_router.get("/users/subscribe/{twitch_user_id}")
+async def subscribe_to_twitch_user(twitch_user_id: int, db: TwitchPdb, user: CurrentUser):
+    result = await db.subscribe_user_to_streamer(user, twitch_user_id)
+    if result:
+        return JSONResponse({"detail": "subscribed"}, status_code=200)
+    else:
+        raise HTTPException(detail="Unknown error", status_code=500)
+
+
+@twitch_router.get("/send_notifications")
+async def send_notifications(db: TwitchPdb, parser: TwitchParserObject):
+    await get_live_subscribed_streams(db, parser)
+
+@twitch_router.get('/reports/popular')
+async def get_most_popular_streamer(db: TwitchPdb):
+    pass
+
 @twitch_router.get("/test")
-async def test_twitch(db: TwitchDb):
+async def test_twitch(db: TwitchPdb):
+    res = await db.get_parsed_streams()
+    for item in res:
+        print(item)
     return {"message": "success"}

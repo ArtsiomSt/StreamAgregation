@@ -1,6 +1,10 @@
 from typing import Any
 
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection, AsyncIOMotorDatabase
+from motor.motor_asyncio import (
+    AsyncIOMotorClient,
+    AsyncIOMotorCollection,
+    AsyncIOMotorDatabase
+)
 from twitch.schemas import TwitchStream, TwitchUser
 
 from .database_managers import TwitchDatabaseManager

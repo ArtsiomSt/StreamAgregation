@@ -1,12 +1,15 @@
-from config import Settings
+from auth.routers import auth_router
 from db import twitch_db
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 from twitch.routers import twitch_router
 
+from .config import Settings
+
 app = FastAPI()
 app.include_router(twitch_router, tags=["twitch"])
+app.include_router(auth_router, tags=["auth"])
 
 app.add_middleware(
     CORSMiddleware,

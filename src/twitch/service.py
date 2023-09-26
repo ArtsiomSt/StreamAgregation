@@ -61,17 +61,36 @@ class TwitchParser:
         user_data_dict = response["data"][0]
         user_id = user_data_dict["id"]
         del user_data_dict["id"]
-        return TwitchUser(**user_data_dict, user_id=user_id)
+        return TwitchUser(**user_data_dict, twitch_user_id=user_id)
 
-    def get_streams(self, query_params: dict | None = None) -> Generator[TwitchStream, None, None]:
+    def get_streams(
+        self,
+        query_params: dict | None = None,
+        streams_amount: int = 20,
+        cursor: str = "",
+    ) -> Generator[TwitchStream, None, None]:
         """Method for parsing streams from twitch"""
-
-        stream_url = settings.streams_url
+        if streams_amount > 100:
+            streams_per_page = 100
+        else:
+            streams_per_page = streams_amount
+        stream_url = settings.online_streams_url
+        query_params["first"] = streams_per_page
+        if cursor:
+            query_params["after"] = cursor
+        print(query_params)
         response = self.send_request(stream_url, request_params=query_params)
+        pagination = response.get("pagination")
+        if pagination:
+            cursor = pagination.get("cursor")
         for stream in response["data"]:
             user = self.get_user(int(stream["user_id"]))
             twitch_id = stream["id"]
             del stream["id"]
+            stream["twitch_game_id"] = stream["game_id"]
             yield TwitchStream(
                 **stream, twitch_id=twitch_id, stream_title=stream["title"], user=user
             )
+        streams_amount -= query_params["first"]
+        if streams_amount > 0:
+            yield from self.get_streams(query_params, streams_amount, cursor)

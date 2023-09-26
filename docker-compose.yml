@@ -3,7 +3,7 @@ version: "3.9"
 services:
   fastapi:
     build: src
-    command: bash -c "python -m uvicorn app:app --reload --host 0.0.0.0 --port 8000"
+    command: bash -c "python -m uvicorn application.app:app --reload --host 0.0.0.0 --port 8000"
     ports:
       - "8000:8000"
     volumes:
@@ -15,11 +15,12 @@ services:
       - env/backends.env
       - env/twitch.env
       - env/broker.env
+      - env/db.env
     networks:
       - botnet
   fastapi_parser:
     build: src
-    command: bash -c "python -m uvicorn app:app --reload --host 0.0.0.0 --port 8001"
+    command: bash -c "python -m uvicorn application.app:app --reload --host 0.0.0.0 --port 8001"
     ports:
       - "8001:8001"
     volumes:
@@ -31,6 +32,22 @@ services:
       - env/backends.env
       - env/twitch.env
       - env/broker.env
+      - env/db.env
+    networks:
+      - botnet
+  schedule:
+    build: src
+    command: bash -c "python application/schedule_tasks.py"
+    volumes:
+      - ./src:/app
+    depends_on:
+      - db
+      - kafka
+    env_file:
+      - env/backends.env
+      - env/twitch.env
+      - env/broker.env
+      - env/db.env
     networks:
       - botnet
   db:

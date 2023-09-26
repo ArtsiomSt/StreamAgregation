@@ -20,6 +20,15 @@ sqlalchemy = "*"
 alembic = "*"
 psycopg2-binary = "*"
 pydantic-settings = "*"
+structlog = "*"
+celery = "*"
+redis = "*"
+asgiref = "*"
+passlib = "*"
+python-jose = "*"
+asyncpg = "*"
+schedule = "*"
+fastapi-mail = "*"
 
 [dev-packages]
 

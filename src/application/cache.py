@@ -3,9 +3,10 @@ from datetime import datetime
 from typing import Any
 
 from aioredis import Redis
-from config import Settings
-from exceptions import PaginationException
 from pydantic import BaseModel
+
+from .config import Settings
+from .exceptions import PaginationException
 
 settings = Settings()
 
@@ -24,7 +25,7 @@ class RedisCacheManager:
 
     async def save_to_cache(self, key: Any, ttl: int, value: Any) -> bool:
         if isinstance(value, BaseModel) or isinstance(value, dict):
-            dict_from_object = value.dict() if isinstance(value, BaseModel) else value
+            dict_from_object = value.model_dump() if isinstance(value, BaseModel) else value
             replace_basemodel_unserializable_fields(dict_from_object)
             value = dict_from_object
         value = json.dumps(value).encode("utf-8")

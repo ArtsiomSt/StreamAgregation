@@ -8,9 +8,17 @@ class Settings(BaseSettings):
     redis_host: str = "localhost"
     redis_port: str = "6379"
     kafka_broker: str = "localhost:9092"
+    email_host_user: str
+    email_host_password: str
 
     class Config:
         fields = {
+            "email_host_user": {
+                "env": "EMAIL_HOST_USER",
+            },
+            "email_host_password": {
+                "env":  "EMAIL_HOST_PASSWORD",
+            },
             "mongo_url": {
                 "env": "DATABASE_URL",
             },

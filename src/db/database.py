@@ -1,11 +1,22 @@
+from typing import Annotated
+
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import Session, sessionmaker
+
 from db.config import DataBaseConfig
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 db_settings = DataBaseConfig()
 
-db_url = f"postgresql://{db_settings.pg_user}:{db_settings.pg_password}@{db_settings.pg_host}:{db_settings.pg_port}/{db_settings.db_name}"
+db_url = f"postgresql+asyncpg://{db_settings.pg_user}:{db_settings.pg_password}@{db_settings.pg_host}:{db_settings.pg_port}/{db_settings.db_name}"
 
-engine = create_engine(db_url, echo=True)
+engine = create_async_engine(db_url, echo=True, future=True)
 
-SessionMake = sessionmaker(autoflush=False, expire_on_commit=True, bind=engine)
+async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+
+async def get_db_session():
+    return async_session()
+
+
+DataBase = Annotated[Session, Depends(get_db_session)]
