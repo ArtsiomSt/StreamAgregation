@@ -23,6 +23,9 @@ class TwitchUser(CustomModel):
         else:
             return value
 
+class Tag(CustomModel):
+    tag_name: str
+
 
 class TwitchResponseFromParser(PaginateFields):
     twitch_streams_params: dict

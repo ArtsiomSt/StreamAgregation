@@ -1,4 +1,5 @@
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
+from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
+
 from .config import Settings
 
 settings = Settings()
@@ -9,11 +10,12 @@ email_config = ConnectionConfig(
     MAIL_FROM=settings.email_host_user,
     MAIL_PORT=465,
     MAIL_SERVER="smtp.yandex.ru",
-    MAIL_STARTTLS = False,
-    MAIL_SSL_TLS = True,
-    USE_CREDENTIALS = True,
-    VALIDATE_CERTS = True
+    MAIL_STARTTLS=False,
+    MAIL_SSL_TLS=True,
+    USE_CREDENTIALS=True,
+    VALIDATE_CERTS=True,
 )
+
 
 def get_available_params(params: dict, available_params: list[str]) -> dict:
     result = {}
@@ -22,14 +24,13 @@ def get_available_params(params: dict, available_params: list[str]) -> dict:
             result[param_key] = param_value
     return result
 
+
 async def send_email_notification(recipients_list: list[str], body: str) -> None:
     message = MessageSchema(
-        subject='Stream Started Notification',
+        subject="Stream Started Notification",
         recipients=recipients_list,
         body=body,
         subtype=MessageType.plain,
     )
     fast_mail = FastMail(email_config)
     await fast_mail.send_message(message)
-
-

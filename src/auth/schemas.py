@@ -1,7 +1,7 @@
 import re
 from typing import Optional
 
-from pydantic import BaseModel, field_validator, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 
 
 class UserRegisterScheme(BaseModel):

@@ -1,8 +1,7 @@
-from sqlalchemy import String
-from sqlalchemy.orm import relationship, mapped_column, Mapped
-
-from twitch.models import Base
 from application.models import DefaultFields
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from twitch.models import Base
 
 
 class User(DefaultFields, Base):
@@ -14,4 +13,6 @@ class User(DefaultFields, Base):
     first_name: Mapped[str] = mapped_column(String, nullable=True)
     last_name: Mapped[str] = mapped_column(String, nullable=True)
 
-    subscriptions = relationship('twitch.models.TwitchUser', secondary='user_subscription', back_populates='subscribers')
+    subscriptions = relationship(
+        "twitch.models.TwitchUser", secondary="user_subscription", back_populates="subscribers"
+    )

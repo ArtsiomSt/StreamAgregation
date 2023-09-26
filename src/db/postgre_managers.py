@@ -1,20 +1,30 @@
 from typing import Any
 
-from fastapi import HTTPException
-from sqlalchemy import or_, select, and_, insert
-from sqlalchemy.exc import NoResultFound
-from sqlalchemy.orm import joinedload
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from auth.exceptions import AuthException
 from auth.models import User
 from auth.schemas import ExtendedUserScheme, UserRegisterScheme
 from auth.utils import get_hashed_password, verify_password
-from db.database import get_db_session
-from twitch.models import TwitchGame, TwitchStream, TwitchUser, UserSubscription, NotificationUser, Notification
+from fastapi import HTTPException
+from sqlalchemy import and_, insert, or_, select, func
+from sqlalchemy.exc import NoResultFound
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
+from twitch.models import (
+    Notification,
+    NotificationUser,
+    TwitchGame,
+    TwitchStream,
+    TwitchUser,
+    UserSubscription,
+    Tag,
+    StreamTag,
+)
 from twitch.schemas import TwitchGame as TwitchGameScheme
 from twitch.schemas import TwitchStream as TwitchStreamScheme
 from twitch.schemas import TwitchUser as TwitchUserScheme
+from twitch.schemas import Tag as TagScheme
+
+from db.database import get_db_session
 
 
 class RelationalManager:
@@ -30,7 +40,9 @@ class RelationalManager:
 class AuthRelationalManager(RelationalManager):
     async def save_one_user(self, user: UserRegisterScheme) -> ExtendedUserScheme:
         try:
-            result = await self.db.execute(select(User).filter(or_(User.username == user.username, User.email == user.email)))
+            result = await self.db.execute(
+                select(User).filter(or_(User.username == user.username, User.email == user.email))
+            )
             current_db_user = result.scalars().one()
         except NoResultFound:
             current_db_user = None
@@ -79,9 +91,7 @@ class TwitchRelationalManager(RelationalManager):
 
     async def save_one_stream(self, stream: TwitchStreamScheme) -> TwitchStreamScheme:
         twitch_user = await self.save_one_user(stream.user)
-        twitch_game = TwitchGameScheme(
-            game_name=stream.game_name, twitch_game_id=stream.twitch_game_id
-        )
+        twitch_game = TwitchGameScheme(game_name=stream.game_name, twitch_game_id=stream.twitch_game_id)
         twitch_game = await self.save_one_game(twitch_game)
         try:
             result = await self.db.execute(select(TwitchStream).filter_by(twitch_id=stream.twitch_id))
@@ -102,6 +112,8 @@ class TwitchRelationalManager(RelationalManager):
             await self.db.commit()
             await self.db.refresh(twitch_stream)
             stream.id = twitch_stream.id
+            stream_tags = await self.save_stream_tags(stream.tags)
+            await self.attach_tags_to_stream(stream, stream_tags)
         return stream
 
     async def save_one_game(self, game: TwitchGameScheme) -> TwitchGameScheme:
@@ -149,17 +161,21 @@ class TwitchRelationalManager(RelationalManager):
             result = await self.db.execute(select(TwitchUser).filter_by(twitch_user_id=twitch_user_id).limit(1))
             current_db_user = result.scalars().one()
         except NoResultFound:
-            raise HTTPException(status_code=400, detail='No such streamer')
+            raise HTTPException(status_code=400, detail="No such streamer")
         return current_db_user
 
     async def subscribe_user_to_streamer(self, user: ExtendedUserScheme, twitch_user_id: int) -> bool:
-        result = await self.db.execute(select(UserSubscription).filter(and_(UserSubscription.user_id == user.id, UserSubscription.twitch_user_id==twitch_user_id)))
+        result = await self.db.execute(
+            select(UserSubscription).filter(
+                and_(UserSubscription.user_id == user.id, UserSubscription.twitch_user_id == twitch_user_id)
+            )
+        )
         try:
             current_subscription = result.scalars().one()
         except NoResultFound:
             current_subscription = None
         if current_subscription:
-            raise HTTPException(status_code=400, detail='You are already subscribed to this streamer')
+            raise HTTPException(status_code=400, detail="You are already subscribed to this streamer")
         twitch_user = await self.get_twitch_user(twitch_user_id)
         new_subscription = UserSubscription(
             user_id=user.id,
@@ -179,12 +195,12 @@ class TwitchRelationalManager(RelationalManager):
     async def save_notifications(self, notified_users: list[ExtendedUserScheme], stream: TwitchStreamScheme) -> None:
         result = await self.db.execute(
             insert(Notification).returning(Notification),
-            [{"twitch_stream_id": stream.twitch_id, "notification_count": len(notified_users)}]
+            [{"twitch_stream_id": stream.twitch_id, "notification_count": len(notified_users)}],
         )
         notification = result.scalars().one()
         await self.db.execute(
             insert(NotificationUser),
-            [{"user_id": user.id, "notification_id": notification.id} for user in notified_users]
+            [{"user_id": user.id, "notification_id": notification.id} for user in notified_users],
         )
         await self.db.commit()
 
@@ -195,19 +211,43 @@ class TwitchRelationalManager(RelationalManager):
             return True
         return False
 
+    async def save_stream_tags(self, tags: list[str]) -> list[TagScheme]:
+        if not tags:
+            return []
+        result = await self.db.execute(select(Tag).where(Tag.tag_name.in_(tags)))
+        existing_tags = list(map(lambda tag: tag.tag_name, result.scalars().all()))
+        tags_to_save = [{"tag_name": tag} for tag in tags if tag and tag not in existing_tags]
+        if tags_to_save:
+            await self.db.execute(insert(Tag), tags_to_save)
+        result = await self.db.execute(select(Tag).where(Tag.tag_name.in_(tags)))
+        return [TagScheme(**tag.__dict__) for tag in result.scalars().all()]
+
+    async def attach_tags_to_stream(self, stream: TwitchStreamScheme, tags: list[TagScheme]) -> None:
+        if tags:
+            await self.db.execute(insert(StreamTag), [{"stream_id": stream.id, "tag_id": tag.id} for tag in tags])
+
     async def get_parsed_streams(self, paginate_by: int = 30, page_num: int = 0) -> list[TwitchStreamScheme]:
         result = await self.db.execute(
             select(TwitchStream)
-            .join(TwitchUser, TwitchStream.user_id==TwitchUser.id).options(joinedload(TwitchStream.user))
-            .join(TwitchGame, TwitchStream.game_id==TwitchGame.id).options(joinedload(TwitchStream.game))
-            .offset(page_num).limit(paginate_by))
-        streams = result.scalars().all()
-        return [TwitchStreamScheme(
-            twitch_id=stream.twitch_id,
-            user=TwitchUserScheme(**stream.user.__dict__),
-            twitch_game_id=stream.game.twitch_game_id,
-            game_name=stream.game.game_name,
-            stream_title=stream.stream_title,
-            viewer_count=stream.viewer_count,
-            tags=[]
-        ) for stream in streams]
+            .join(TwitchUser, TwitchStream.user_id == TwitchUser.id)
+            .options(joinedload(TwitchStream.user))
+            .join(TwitchGame, TwitchStream.game_id == TwitchGame.id)
+            .options(joinedload(TwitchStream.game))
+            .options(joinedload(TwitchStream.tags))
+            .offset(page_num)
+            .limit(paginate_by)
+        )
+        streams = result.scalars().unique().all()
+        return [
+            TwitchStreamScheme(
+                id=stream.id,
+                twitch_id=stream.twitch_id,
+                user=TwitchUserScheme(**stream.user.__dict__),
+                twitch_game_id=stream.game.twitch_game_id,
+                game_name=stream.game.game_name,
+                stream_title=stream.stream_title,
+                viewer_count=stream.viewer_count,
+                tags=[tag.tag_name for tag in stream.tags],
+            )
+            for stream in streams
+        ]

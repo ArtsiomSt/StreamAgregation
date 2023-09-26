@@ -1,10 +1,8 @@
 from fastapi import APIRouter
 
 from auth.dependencis import CurrentUser, UserPdb
-from auth.schemas import (ExtendedUserScheme, RefreshToken, UserLoginData,
-                          UserRegisterScheme)
-from auth.utils import (create_access_token, create_refresh_token,
-                        get_refreshed_access_token)
+from auth.schemas import ExtendedUserScheme, RefreshToken, UserLoginData, UserRegisterScheme
+from auth.utils import create_access_token, create_refresh_token, get_refreshed_access_token
 
 auth_router = APIRouter(prefix="/auth")
 

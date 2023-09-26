@@ -3,24 +3,22 @@ from copy import deepcopy
 from typing import Annotated
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import JSONResponse
-from pydantic import ValidationError
-
+from application.cache import RedisCacheManager
+from application.dependecies import get_cache_manager
+from application.schemas import ResponseFromDb
 from auth.dependencis import CurrentUser
 from brokers.producer import producer
-from application.cache import RedisCacheManager
 from core.enums import ObjectStatus
 from db import get_twitch_database
 from db.database_managers import TwitchDatabaseManager
 from db.postgre_managers import TwitchRelationalManager
-from application.dependecies import get_cache_manager
-from application.schemas import ResponseFromDb
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
+from pydantic import ValidationError
 
 from .config import TwitchSettings
 from .dependencies import get_twitch_parser, get_twitch_pdb
-from .schemas import (TwitchStreamParams,
-                      TwitchUserParams, TaskStatus)
+from .schemas import TaskStatus, TwitchStreamParams, TwitchUserParams
 from .service import TwitchParser
 from .tasks import get_live_subscribed_streams
 
@@ -61,11 +59,7 @@ async def parse_streams(
     processed_task = TaskStatus(
         task_id=task_id, task_status=ObjectStatus.PROCESSED.name, result={"streams_parsed": streams_amount}
     )
-    await cache.save_to_cache(
-        task_id,
-        60 * 5,
-        processed_task
-    )
+    await cache.save_to_cache(task_id, 60 * 5, processed_task)
     return processed_task
 
 
@@ -88,21 +82,18 @@ async def get_parsed_streams(params: TwitchStreamParams, cache: CacheMngr):
     await cache.save_to_cache(
         task_id,
         60 * 3,
-        TaskStatus(
-            task_status=ObjectStatus.PENDING.name, task_id=task_id
-        ),
+        TaskStatus(task_status=ObjectStatus.PENDING.name, task_id=task_id),
     )
-    message_data['task_id'] = task_id
+    message_data["task_id"] = task_id
     producer.produce(
         settings.twitch_stream_topic,
         key="parse_category",
         value=json.dumps(message_data),
     )
-    return TaskStatus(
-        task_status=ObjectStatus.CREATED.name, task_id=task_id
-    )
+    return TaskStatus(task_status=ObjectStatus.CREATED.name, task_id=task_id)
 
-@twitch_router.get('/task/{task_id}', response_model=TaskStatus)
+
+@twitch_router.get("/task/{task_id}", response_model=TaskStatus)
 async def check_task_status(task_id: str, cache: CacheMngr):
     response_from_cache = await cache.get_object_from_cache(task_id)
     if response_from_cache:
@@ -118,9 +109,7 @@ async def check_task_status(task_id: str, cache: CacheMngr):
 async def get_parsed_users(db: TwitchDb, params: TwitchUserParams = Depends()):
     """View that stands for getting users from parsed streams from database"""
 
-    users = await db.get_users_by_filter(
-        {}, paginate_by=params.paginate_by, page_num=params.page_num
-    )
+    users = await db.get_users_by_filter({}, paginate_by=params.paginate_by, page_num=params.page_num)
     return ResponseFromDb(
         status=ObjectStatus.PROCESSED.name,
         data=users,
@@ -129,7 +118,7 @@ async def get_parsed_users(db: TwitchDb, params: TwitchUserParams = Depends()):
     )
 
 
-@twitch_router.get('/users/subscribe/{twitch_user_id}')
+@twitch_router.get("/users/subscribe/{twitch_user_id}")
 async def subscribe_to_twitch_user(twitch_user_id: int, db: TwitchPdb, user: CurrentUser):
     result = await db.subscribe_user_to_streamer(user, twitch_user_id)
     if result:
@@ -142,9 +131,13 @@ async def subscribe_to_twitch_user(twitch_user_id: int, db: TwitchPdb, user: Cur
 async def send_notifications(db: TwitchPdb, parser: TwitchParserObject):
     await get_live_subscribed_streams(db, parser)
 
+@twitch_router.get('/reports/popular')
+async def get_most_popular_streamer(db: TwitchPdb):
+    pass
 
 @twitch_router.get("/test")
 async def test_twitch(db: TwitchPdb):
     res = await db.get_parsed_streams()
-    print(res)
+    for item in res:
+        print(item)
     return {"message": "success"}

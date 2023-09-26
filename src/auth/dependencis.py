@@ -1,5 +1,6 @@
 from typing import Annotated
 
+from db.postgre_managers import AuthRelationalManager
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
@@ -7,7 +8,6 @@ from pydantic import ValidationError
 
 from auth.exceptions import AuthException
 from auth.schemas import ExtendedUserScheme, TokenPayload
-from db.postgre_managers import AuthRelationalManager
 
 from .utils import ALGORITHM, JWT_SECRET_KEY
 
