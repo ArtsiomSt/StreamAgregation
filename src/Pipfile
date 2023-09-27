@@ -29,6 +29,8 @@ python-jose = "*"
 asyncpg = "*"
 schedule = "*"
 fastapi-mail = "*"
+aiohttp = "==3.8.5"
+aioschedule = "==0.5.2"
 
 [dev-packages]
 

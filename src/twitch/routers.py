@@ -137,7 +137,7 @@ async def get_most_popular_streamer(db: TwitchPdb):
 
 @twitch_router.get("/test")
 async def test_twitch(db: TwitchPdb):
-    res = await db.get_parsed_streams()
+    res = await db.get_parsed_streams(40, 1)
     for item in res:
         print(item)
     return {"message": "success"}

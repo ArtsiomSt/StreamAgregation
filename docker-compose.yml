@@ -36,13 +36,15 @@ services:
     networks:
       - botnet
   schedule:
-    build: src
-    command: bash -c "python application/schedule_tasks.py"
+    build: scheduler
+    command: bash -c "python schedule_tasks.py"
     volumes:
-      - ./src:/app
+      - ./scheduler:/app
     depends_on:
       - db
       - kafka
+      - fastapi_parser
+      - fastapi
     env_file:
       - env/backends.env
       - env/twitch.env

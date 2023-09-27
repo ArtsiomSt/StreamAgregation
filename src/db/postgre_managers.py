@@ -234,7 +234,7 @@ class TwitchRelationalManager(RelationalManager):
             .join(TwitchGame, TwitchStream.game_id == TwitchGame.id)
             .options(joinedload(TwitchStream.game))
             .options(joinedload(TwitchStream.tags))
-            .offset(page_num)
+            .offset(page_num*paginate_by)
             .limit(paginate_by)
         )
         streams = result.scalars().unique().all()
