@@ -34,4 +34,4 @@ async def refresh(refresh_token: RefreshToken):
 @auth_router.get("/test")
 async def test_auth(user: CurrentUser):
     print(user)
-    return "Success"
+    return {"detail": "success"}

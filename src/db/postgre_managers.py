@@ -234,7 +234,7 @@ class TwitchRelationalManager(RelationalManager):
             .join(TwitchGame, TwitchStream.game_id == TwitchGame.id)
             .options(joinedload(TwitchStream.game))
             .options(joinedload(TwitchStream.tags))
-            .offset(page_num*paginate_by)
+            .offset(page_num * paginate_by)
             .limit(paginate_by)
         )
         streams = result.scalars().unique().all()
@@ -251,3 +251,15 @@ class TwitchRelationalManager(RelationalManager):
             )
             for stream in streams
         ]
+
+    async def get_most_popular_twitch_games(self) -> list[TwitchGameScheme]:
+        games_amount = (
+            select(TwitchStream.game_id.label("game_id"), func.count(TwitchStream.game_id).label("streams_amount"))
+            .group_by(TwitchStream.game_id)
+            .alias("f1")
+        )
+        best_amount_of_streams = select(func.max(games_amount.c.streams_amount))
+        best_games_id = select(games_amount.c.game_id).where(games_amount.c.streams_amount == best_amount_of_streams)
+        get_best_games = select(TwitchGame).where(TwitchGame.id.in_(best_games_id))
+        result = await self.db.execute(get_best_games)
+        return [TwitchGameScheme(**game.__dict__) for game in result.scalars().all()]
