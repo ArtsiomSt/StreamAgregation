@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from auth.dependencis import CurrentUser, UserPdb
-from auth.schemas import ExtendedUserScheme, RefreshToken, UserLoginData, UserRegisterScheme
+from auth.schemas import ExtendedUserScheme, RefreshToken, UserLoginData, UserRegisterScheme, UserScheme
 from auth.utils import create_access_token, create_refresh_token, get_refreshed_access_token
 
 auth_router = APIRouter(prefix="/auth")
@@ -31,7 +31,8 @@ async def refresh(refresh_token: RefreshToken):
     }
 
 
-@auth_router.get("/test")
-async def test_auth(user: CurrentUser):
-    print(user)
-    return {"detail": "success"}
+@auth_router.get('/me', response_model=UserScheme)
+async def get_me(user: CurrentUser):
+    return UserScheme(
+        **user.model_dump()
+    )

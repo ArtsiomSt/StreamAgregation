@@ -5,7 +5,7 @@ from auth.models import User
 from auth.schemas import ExtendedUserScheme, UserRegisterScheme
 from auth.utils import get_hashed_password, verify_password
 from fastapi import HTTPException
-from sqlalchemy import and_, insert, or_, select, func
+from sqlalchemy import and_, insert, or_, select, func, delete
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -186,6 +186,24 @@ class TwitchRelationalManager(RelationalManager):
         await self.db.commit()
         return True
 
+    async def unsubscribe_user_from_streamer(self, user: ExtendedUserScheme, twitch_user_id: int) -> bool:
+        result = await self.db.execute(
+            select(UserSubscription).filter(
+                and_(UserSubscription.user_id == user.id, UserSubscription.twitch_user_id == twitch_user_id)
+            )
+        )
+        try:
+            current_subscription = result.scalars().one()
+        except NoResultFound:
+            raise HTTPException(status_code=400, detail="You are not subscribed to this streamer")
+        await self.db.execute(
+            delete(UserSubscription).filter(
+                and_(UserSubscription.user_id == user.id, UserSubscription.twitch_user_id == twitch_user_id)
+            )
+        )
+        await self.db.commit()
+        return True
+
     async def get_users_followed_to_streamer(self, twitch_user_id: int) -> list[ExtendedUserScheme]:
         query_subscribed_user_ids = select(UserSubscription.user_id).filter_by(twitch_user_id=twitch_user_id)
         result = await self.db.execute(select(User).where(User.id.in_(query_subscribed_user_ids)))
@@ -263,3 +281,25 @@ class TwitchRelationalManager(RelationalManager):
         get_best_games = select(TwitchGame).where(TwitchGame.id.in_(best_games_id))
         result = await self.db.execute(get_best_games)
         return [TwitchGameScheme(**game.__dict__) for game in result.scalars().all()]
+
+    async def get_streamers(self, paginate_by: int = 30, page_num: int = 0, search: str = '') -> list[TwitchUserScheme]:
+        result = await self.db.execute(select(TwitchUser).where(
+            or_(TwitchUser.display_name.like(f'%{search}%'), TwitchUser.login.like(f'%{search}%'))).offset(
+            paginate_by * page_num).limit(paginate_by))
+        return [
+            TwitchUserScheme(**streamer.__dict__)
+            for streamer in result.scalars().all()
+        ]
+
+    async def get_users_subscriptions(self, user: ExtendedUserScheme) -> list[TwitchUserScheme]:
+        result = await self.db.execute(
+            select(TwitchUser)
+            .join(UserSubscription, TwitchUser.id == UserSubscription.twitch_db_user_id)
+            .options(joinedload(TwitchUser.subscribers))
+            .where(UserSubscription.user_id == user.id)
+        )
+        return [
+            TwitchUserScheme(**streamer.__dict__)
+            for streamer in result.scalars().unique().all()
+        ]
+

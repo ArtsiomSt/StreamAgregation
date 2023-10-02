@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
+import {useNavigate} from "react-router-dom";
+
 
 const LoginForm = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [detail, setDetail] = useState('');
 
+    const navigate = useNavigate();
     const handleLogin = async (e) => {
         e.preventDefault();
         console.log('START EMAIL')
@@ -25,7 +28,7 @@ const LoginForm = () => {
                 localStorage.setItem('access_token', data.access_token);
                 localStorage.setItem('refresh_token', data.refresh_token);
                 const a = localStorage.getItem("access_token");
-                console.log(a);
+                navigate('/profile')
             }
             else {
                 const data = await response.json();

@@ -1,9 +1,7 @@
 from datetime import datetime
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field, model_validator
-
-from .exceptions import PaginationException
+from pydantic import BaseModel, Field
 
 
 class CustomModel(BaseModel):
@@ -12,8 +10,8 @@ class CustomModel(BaseModel):
 
 
 class PaginateFields(BaseModel):
-    paginate_by: Optional[int] = Field(10, gt=-1, le=20)
-    page_num: Optional[int] = Field(0, gt=-1)
+    paginate_by: int = Field(10, gt=-1, le=20)
+    page_num: int = Field(0, gt=-1)
 
 
 class ResponseFromDb(PaginateFields):

@@ -18,7 +18,7 @@ from pydantic import ValidationError
 
 from .config import TwitchSettings
 from .dependencies import get_twitch_parser, get_twitch_pdb
-from .schemas import TaskStatus, TwitchStreamParams, TwitchUserParams, TwitchGame
+from .schemas import TaskStatus, TwitchStreamParams, TwitchUserParams, TwitchGame, TwitchUser, TwitchStreamerParams
 from .service import TwitchParser
 from .tasks import get_live_subscribed_streams
 
@@ -127,9 +127,19 @@ async def subscribe_to_twitch_user(twitch_user_id: int, db: TwitchPdb, user: Cur
         raise HTTPException(detail="Unknown error", status_code=500)
 
 
+@twitch_router.delete("/users/subscribe/{twitch_user_id}")
+async def unsubscribe_from_twitch_user(twitch_user_id: int, db: TwitchPdb, user: CurrentUser):
+    result = await db.unsubscribe_user_from_streamer(user, twitch_user_id)
+    if result:
+        return JSONResponse({"detail": "subscribed"}, status_code=200)
+    else:
+        raise HTTPException(detail="Unknown error", status_code=500)
+
+
 @twitch_router.get("/send_notifications")
 async def send_notifications(db: TwitchPdb, parser: TwitchParserObject):
     await get_live_subscribed_streams(db, parser)
+
 
 @twitch_router.get('/reports/popular')
 async def get_most_popular_streamer(db: TwitchPdb):
@@ -139,6 +149,16 @@ async def get_most_popular_streamer(db: TwitchPdb):
 @twitch_router.get('/games/most_popular')
 async def get_most_popular_games(db: TwitchPdb) -> list[TwitchGame]:
     return await db.get_most_popular_twitch_games()
+
+
+@twitch_router.post('/streamers')
+async def get_streamers(db: TwitchPdb, params: TwitchStreamerParams) -> list[TwitchUser]:
+    return await db.get_streamers(params.paginate_by, params.page_num, params.search_streamer)
+
+
+@twitch_router.get('/user/subscriptions')
+async def get_users_subscriptions(db: TwitchPdb, user: CurrentUser) -> list[TwitchUser]:
+    return await db.get_users_subscriptions(user)
 
 
 @twitch_router.get("/test")

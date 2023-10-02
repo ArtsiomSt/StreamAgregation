@@ -23,6 +23,7 @@ class TwitchUser(CustomModel):
         else:
             return value
 
+
 class Tag(CustomModel):
     tag_name: str
 
@@ -70,3 +71,7 @@ class TwitchStream(CustomModel):
 
 class TwitchUserParams(PaginateFields):
     pass
+
+
+class TwitchStreamerParams(PaginateFields):
+    search_streamer: Optional[str] = ''
