@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {Navigate, useNavigate} from "react-router-dom";
-import { getRequestWithAuth, postRequestWithAuth } from "../utils/requests.jsx";
+import { getRequestWithAuth, bodyRequestWithAuth } from "../utils/requests.jsx";
 
 const TestForm = () => {
     const [email, setEmail] = useState('');
@@ -14,7 +14,6 @@ const TestForm = () => {
 
     const handleRegister = async (e) => {
         e.preventDefault();
-        console.log('info str')
         try {
             try {
                 const response = await getRequestWithAuth("/auth/test")

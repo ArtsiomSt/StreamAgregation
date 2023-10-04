@@ -1,4 +1,4 @@
-export async function postRequest(url, body, headers = {}) {
+export async function bodyRequest(url, body, headers = {}, method = 'POST') {
     const additional_headers = {
         'Content-Type': 'application/json',
     }
@@ -6,7 +6,7 @@ export async function postRequest(url, body, headers = {}) {
         additional_headers[key] = value
     }
     return await fetch(url, {
-        method: "POST",
+        method: method,
         headers: additional_headers,
         body: JSON.stringify(body)
     })
@@ -44,7 +44,7 @@ async function refreshToken(refresh_token) {
     const body = {
         "refresh_token": refresh_token
     }
-    const refresh_response = await postRequest('/auth/token/refresh', body)
+    const refresh_response = await bodyRequest('/auth/token/refresh', body)
     if (refresh_response.status === 401) {
         throw "badAuth"
     }
@@ -100,19 +100,21 @@ export async function deleteRequestWithAuth(url) {
 }
 
 
-export async function postRequestWithAuth(url, body) {
+export async function bodyRequestWithAuth(url, body, method = "POST") {
     const access_token = localStorage.getItem('access_token');
     const refresh_token = localStorage.getItem('refresh_token');
     if (access_token === null || refresh_token === null) {
         throw 'noAuth'
     }
-    const response = await postRequest(url, body, {'Authorization': 'Bearer ' + access_token});
+    const response = await bodyRequest(url, body, {'Authorization': 'Bearer ' + access_token}, method);
     if (response.status === 401) {
         const new_access_token = await refreshToken(refresh_token)
-        const second_response = await postRequest(url, body, {'Authorization': 'Bearer ' + new_access_token});
+        const second_response = await bodyRequest(url, body, {'Authorization': 'Bearer ' + new_access_token}, method);
         if (second_response.status === 200) {
             return second_response
         } else {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
             throw "noAuth"
         }
     }

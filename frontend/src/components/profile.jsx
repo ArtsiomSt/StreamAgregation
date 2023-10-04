@@ -1,6 +1,7 @@
-import {getRequestWithAuth} from "../utils/requests";
+import {bodyRequestWithAuth, getRequestWithAuth, getRequest} from "../utils/requests";
 import {useNavigate} from "react-router-dom";
-import {useState, useEffect} from "react";
+import React, {useState, useEffect} from "react";
+import {get} from "axios";
 
 
 const ProfileComponent = () => {
@@ -9,8 +10,13 @@ const ProfileComponent = () => {
     const [firstName, setFirstName] = useState('');
     const [username, setUsername] = useState('')
     const [lastName, setLastName] = useState('');
-
+    const [newEmail, setNewEmail] = useState('');
+    const [detail, setDetail] = useState('');
+    const [newFirstName, setNewFirstName] = useState('');
+    const [newUsername, setNewUsername] = useState('')
+    const [newLastName, setNewLastName] = useState('');
     const navigate = useNavigate();
+
     const getProfile = async () => {
         try {
             const response = await getRequestWithAuth('/auth/me');
@@ -26,32 +32,94 @@ const ProfileComponent = () => {
             }
         }
     }
+
+    const handleChangeProfileInfo = async (e) => {
+        e.preventDefault();
+        try {
+            const body = {
+                "email": email,
+                "first_name": newFirstName,
+                "last_name": newLastName,
+                "username": newUsername
+            };
+            if (newUsername === username && newLastName === lastName && firstName === firstName) {
+                setDetail("You have to change something in your profile")
+            } else {
+                const response = await bodyRequestWithAuth('/auth/me', body, 'PATCH');
+                await getProfile();
+                setNewLastName('');
+                setNewFirstName('');
+                setNewUsername('');
+            }
+        } catch (error) {
+            if (error === 'noAuth') {
+                navigate('/login')
+            }
+        }
+    }
+
     useEffect(() => {
         getProfile()
     }, []);
     return (
         <div className="container">
-            <h1>Your profile info</h1>
-            <table className="table">
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>First Name</th>
-                    <th>Last Name</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                    <td>{id}</td>
-                    <td>{username}</td>
-                    <td>{email}</td>
-                    <td>{firstName}</td>
-                    <td>{lastName}</td>
-                </tr>
-                </tbody>
-            </table>
+            <div>
+                <h1>Your profile info</h1>
+                <table className="table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>{id}</td>
+                        <td>{username}</td>
+                        <td>{email}</td>
+                        <td>{firstName}</td>
+                        <td>{lastName}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <form onSubmit={handleChangeProfileInfo}>
+                    <div>
+                        <label>Username: </label>
+                        <input
+                            type="text"
+                            placeholder="new username"
+                            value={newUsername}
+                            onChange={(e) => setNewUsername(e.target.value)}
+                            required={true}
+                        />
+                    </div>
+                    <div>
+                        <label>First Name: </label>
+                        <input
+                            type="text"
+                            placeholder="new first name"
+                            value={newFirstName}
+                            onChange={(e) => setNewFirstName(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <label>Last Name: </label>
+                        <input
+                            type="text"
+                            placeholder="new last name"
+                            value={newLastName}
+                            onChange={(e) => setNewLastName(e.target.value)}
+                        />
+                    </div>
+                    <button type="submit">Submit</button>
+                    <h3>{detail}</h3>
+                </form>
+            </div>
         </div>
     )
 }

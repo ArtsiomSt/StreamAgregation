@@ -2,10 +2,10 @@ from typing import Any
 
 from auth.exceptions import AuthException
 from auth.models import User
-from auth.schemas import ExtendedUserScheme, UserRegisterScheme
+from auth.schemas import ExtendedUserScheme, UserRegisterScheme, UserScheme
 from auth.utils import get_hashed_password, verify_password
 from fastapi import HTTPException
-from sqlalchemy import and_, insert, or_, select, func, delete
+from sqlalchemy import and_, insert, or_, select, func, delete, update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -83,6 +83,20 @@ class AuthRelationalManager(RelationalManager):
         except NoResultFound:
             raise AuthException("Invalid token subject")
         return ExtendedUserScheme(**user.__dict__)
+
+    async def change_user_profile(self, user: ExtendedUserScheme, new_user_data: UserScheme) -> UserScheme:
+        current_user = await self.get_one_user_by_email(user.email)
+        await self.db.execute(
+            update(User).where(User.id == current_user.id).values(
+                username=new_user_data.username,
+                first_name=new_user_data.first_name,
+                last_name=new_user_data.last_name
+            )
+        )
+        await self.db.commit()
+        user.id = current_user.id
+        return user
+
 
 
 class TwitchRelationalManager(RelationalManager):

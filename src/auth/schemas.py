@@ -46,3 +46,17 @@ class RefreshToken(BaseModel):
             return value
         else:
             raise ValueError("Not valid refresh token")
+
+
+class TokenScheme(BaseModel):
+    refresh_token: str
+    access_token: str
+
+    @field_validator("refresh_token", 'access_token', mode="before")
+    @classmethod
+    def validate_token(cls, value):
+        pattern = r"^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]*$"
+        if re.match(pattern, value):
+            return value
+        else:
+            raise ValueError("Not valid refresh token")

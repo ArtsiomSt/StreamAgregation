@@ -10,7 +10,6 @@ const LoginForm = () => {
     const navigate = useNavigate();
     const handleLogin = async (e) => {
         e.preventDefault();
-        console.log('START EMAIL')
         try {
             const response = await fetch('/auth/token', {
                 method: 'POST',

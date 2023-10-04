@@ -1,6 +1,6 @@
 import {useNavigate} from "react-router-dom";
 import React, {useEffect, useState} from "react";
-import {postRequestWithAuth, postRequest, deleteRequestWithAuth, getRequestWithAuth} from "../utils/requests";
+import {bodyRequestWithAuth, bodyRequest, deleteRequestWithAuth, getRequestWithAuth} from "../utils/requests";
 
 
 const StreamersComponent = () => {
@@ -16,7 +16,7 @@ const StreamersComponent = () => {
             if (search) {
                 body['search_streamer'] = search;
             }
-            const response = await postRequest('/twitch/streamers', body);
+            const response = await bodyRequest('/twitch/streamers', body);
             setData(await response.json());
         } catch (error) {
             console.log(error);
