@@ -81,7 +81,7 @@ class AuthRelationalManager(RelationalManager):
             result = await self.db.execute(select(User).filter_by(email=email))
             user = result.scalars().one()
         except NoResultFound:
-            raise AuthException("Invalid token subject")
+            raise AuthException("Invalid subject")
         return ExtendedUserScheme(**user.__dict__)
 
     async def change_user_profile(self, user: ExtendedUserScheme, new_user_data: UserScheme) -> UserScheme:
@@ -97,6 +97,13 @@ class AuthRelationalManager(RelationalManager):
         user.id = current_user.id
         return user
 
+    async def confirm_user_email(self, email: str) -> bool:
+        await self.get_one_user_by_email(email)
+        await self.db.execute(
+            update(User).where(User.email == email).values(is_email_verified=True)
+        )
+        await self.db.commit()
+        return True
 
 
 class TwitchRelationalManager(RelationalManager):

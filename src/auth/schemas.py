@@ -19,6 +19,7 @@ class UserScheme(BaseModel):
     email: EmailStr
     first_name: Optional[str] = ""
     last_name: Optional[str] = ""
+    is_email_verified: bool = False
 
 
 class ExtendedUserScheme(UserScheme):

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {useNavigate} from "react-router-dom";
+import NavBar from "./navbar"
 
 
 const LoginForm = () => {
@@ -8,6 +9,10 @@ const LoginForm = () => {
     const [detail, setDetail] = useState('');
 
     const navigate = useNavigate();
+
+    const handleRegisterRedirect = async () => {
+        navigate('/register')
+    }
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
@@ -22,49 +27,54 @@ const LoginForm = () => {
                 })
             });
 
-            if (response.status === 200){
+            if (response.status === 200) {
                 const data = await response.json();
                 localStorage.setItem('access_token', data.access_token);
                 localStorage.setItem('refresh_token', data.refresh_token);
+                document.cookie = "email="+email+"samesite=strict"+"max-age="+24*3600
                 const a = localStorage.getItem("access_token");
                 navigate('/profile')
-            }
-            else {
+            } else {
                 const data = await response.json();
                 console.log(data.detail)
                 setDetail(data.detail)
             }
-        }
-        catch (error){
+        } catch (error) {
             console.error('An error occurred', error);
         }
     };
-   return (
-        <form onSubmit={handleLogin}>
+    return (
+        <div>
+            <NavBar />
+            <form onSubmit={handleLogin}>
+                <div>
+                    <label>Email: </label>
+                    <input
+                        type="email"
+                        placeholder="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required={true}
+                    />
+                </div>
+                <div>
+                    <label>Password: </label>
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required={true}
+                    />
+                </div>
+                <button type="submit">login</button>
+                <h3>{detail}</h3>
+            </form>
             <div>
-                <label>Email: </label>
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required={true}
-                />
+                <h6>Don't have account? <button onClick={handleRegisterRedirect}>Register</button></h6>
             </div>
-            <div>
-                <label>Password: </label>
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required={true}
-                />
-            </div>
-      <button type="submit">login</button>
-      <h3>{detail}</h3>
-    </form>
-  );
+        </div>
+    );
 };
 
 export default LoginForm;

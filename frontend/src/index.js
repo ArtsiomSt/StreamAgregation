@@ -8,6 +8,7 @@ import TestForm from "./components/test";
 import ProfileComponent from "./components/profile";
 import LogOut from "./components/signout";
 import StreamersComponent from "./components/streamers";
+import HelloComponent from "./components/hello";
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
           <Route path="profile" element={<ProfileComponent />} />
           <Route path="logout" element={<LogOut />} />
           <Route path="streamers" element={<StreamersComponent />} />
+          <Route path="" element={<HelloComponent />} />
       </Routes>
     </BrowserRouter>
   );

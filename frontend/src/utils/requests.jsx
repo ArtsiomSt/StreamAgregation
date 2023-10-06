@@ -3,7 +3,7 @@ export async function bodyRequest(url, body, headers = {}, method = 'POST') {
         'Content-Type': 'application/json',
     }
     for (const [key, value] of Object.entries(headers)) {
-        additional_headers[key] = value
+        additional_headers[key] = value;
     }
     return await fetch(url, {
         method: method,
@@ -46,7 +46,8 @@ async function refreshToken(refresh_token) {
     }
     const refresh_response = await bodyRequest('/auth/token/refresh', body)
     if (refresh_response.status === 401) {
-        throw "badAuth"
+        document.cookie = "email="+""+"; SameSite=strict"+"; max-age="+0;
+        throw "noAuth";
     }
     if (refresh_response.status === 200) {
         const data = await refresh_response.json()
@@ -60,7 +61,8 @@ export async function getRequestWithAuth(url) {
     const access_token = localStorage.getItem('access_token');
     const refresh_token = localStorage.getItem('refresh_token');
     if (access_token === null || refresh_token === null) {
-        throw 'noAuth'
+        document.cookie = "email="+""+"; SameSite=strict"+"; max-age="+0;
+        throw 'noAuth';
     }
     const response = await getRequest(url, {'Authorization': 'Bearer ' + access_token});
     if (response.status === 401) {
@@ -69,6 +71,7 @@ export async function getRequestWithAuth(url) {
         if (second_response.status === 200) {
             return second_response
         } else {
+            document.cookie = "email="+""+"; SameSite=strict"+"; max-age="+0;
             throw "noAuth"
         }
     }
@@ -82,6 +85,7 @@ export async function deleteRequestWithAuth(url) {
     const access_token = localStorage.getItem('access_token');
     const refresh_token = localStorage.getItem('refresh_token');
     if (access_token === null || refresh_token === null) {
+        document.cookie = "email="+""+"; SameSite=strict"+"; max-age="+0;
         throw 'noAuth'
     }
     const response = await deleteRequest(url, {'Authorization': 'Bearer ' + access_token});
@@ -91,6 +95,7 @@ export async function deleteRequestWithAuth(url) {
         if (second_response.status === 200) {
             return second_response
         } else {
+            document.cookie = "email="+""+"; SameSite=strict"+"; max-age="+0;
             throw "noAuth"
         }
     }
@@ -104,6 +109,7 @@ export async function bodyRequestWithAuth(url, body, method = "POST") {
     const access_token = localStorage.getItem('access_token');
     const refresh_token = localStorage.getItem('refresh_token');
     if (access_token === null || refresh_token === null) {
+        document.cookie = "email="+""+"; SameSite=strict"+"; max-age="+0;
         throw 'noAuth'
     }
     const response = await bodyRequest(url, body, {'Authorization': 'Bearer ' + access_token}, method);
@@ -113,8 +119,7 @@ export async function bodyRequestWithAuth(url, body, method = "POST") {
         if (second_response.status === 200) {
             return second_response
         } else {
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
+            document.cookie = "email="+""+"; SameSite=strict"+"; max-age="+0;
             throw "noAuth"
         }
     }

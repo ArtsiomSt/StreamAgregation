@@ -6,7 +6,7 @@ settings = Settings()
 
 email_config = ConnectionConfig(
     MAIL_USERNAME=settings.email_host_user,
-    MAIL_PASSWORD=settings.email_host_password,
+    MAIL_PASSWORD="ehebvpurfligbhnb",
     MAIL_FROM=settings.email_host_user,
     MAIL_PORT=465,
     MAIL_SERVER="smtp.yandex.ru",
@@ -14,6 +14,7 @@ email_config = ConnectionConfig(
     MAIL_SSL_TLS=True,
     USE_CREDENTIALS=True,
     VALIDATE_CERTS=True,
+    TIMEOUT=15,
 )
 
 
@@ -25,7 +26,7 @@ def get_available_params(params: dict, available_params: list[str]) -> dict:
     return result
 
 
-async def send_email_notification(recipients_list: list[str], body: str) -> None:
+async def send_email_notification(recipients_list: list[str], body: str, subject: str) -> None:
     message = MessageSchema(
         subject="Stream Started Notification",
         recipients=recipients_list,

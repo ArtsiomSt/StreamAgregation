@@ -1,10 +1,18 @@
-from fastapi import APIRouter, HTTPException
+from typing import Annotated
+from uuid import uuid4
 
+from fastapi import APIRouter, HTTPException, Depends, Request
+
+from application.cache import RedisCacheManager
+from application.dependecies import get_cache_manager
+from application.utils import send_email_notification
 from auth.dependencis import CurrentUser, UserPdb
 from auth.schemas import ExtendedUserScheme, RefreshToken, UserLoginData, UserRegisterScheme, UserScheme, TokenScheme
 from auth.utils import create_access_token, create_refresh_token, get_refreshed_access_token
 
 auth_router = APIRouter(prefix="/auth")
+
+CacheMngr = Annotated[RedisCacheManager, Depends(get_cache_manager)]
 
 
 @auth_router.post("/register", response_model=ExtendedUserScheme)
@@ -43,3 +51,30 @@ async def get_me(user: CurrentUser):
 @auth_router.patch('/me', response_model=UserScheme)
 async def change_profile_info(user: CurrentUser, new_user_data: UserScheme, db: UserPdb):
     return await db.change_user_profile(user, new_user_data)
+
+
+@auth_router.get("/email/send-verify-email")
+async def send_verify_email_message(user: CurrentUser, cache: CacheMngr, request: Request):
+    confirm_token = str(uuid4())
+    await cache.save_to_cache(confirm_token, 300, user.email)
+    await send_email_notification(
+        [user.email],
+        f"To confirm email use this link {request.base_url}auth/email/verify/{confirm_token}",
+        "Email confirmation"
+    )
+    return {"detail": "message sent"}
+
+
+@auth_router.get("/email/verify/{token}")
+async def verify_email_address(token: str, cache: CacheMngr, db: UserPdb):
+    email = await cache.get_object_from_cache(token)
+    if email is None:
+        raise HTTPException(status_code=400, detail='Not valid link')
+    await db.confirm_user_email(email)
+    return {"detail": "email verified"}
+
+
+
+
+
+

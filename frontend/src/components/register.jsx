@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {useNavigate} from "react-router-dom";
+import NavBar from "./navbar"
+
 
 const RegisterForm = () => {
     const [email, setEmail] = useState('');
@@ -28,73 +30,74 @@ const RegisterForm = () => {
                 })
             });
 
-            if (response.status === 200){
+            if (response.status === 200) {
                 setDetail("Register Success");
                 navigate("/login")
-            }
-            else {
+            } else {
                 const data = await response.json();
                 console.log(data.detail)
             }
-        }
-        catch (error){
+        } catch (error) {
             console.error('An error occurred', error);
         }
     };
     return (
-        <form onSubmit={handleRegister}>
-            <div>
-                <label>Email: </label>
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required={true}
-                />
-            </div>
-            <div>
-                <label>Password: </label>
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required={true}
-                />
-            </div>
-            <div>
-                <label>Username: </label>
-                <input
-                    type="text"
-                    placeholder="first name"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required={true}
-                />
-            </div>
-            <div>
-                <label>First Name: </label>
-                <input
-                    type="text"
-                    placeholder="first name"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                />
-            </div>
-            <div>
-                <label>First Name: </label>
-                <input
-                    type="text"
-                    placeholder="last name"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                />
-            </div>
-      <button type="submit">Register</button>
-      <h3>{detail}</h3>
-    </form>
-  );
+        <div>
+            <NavBar />
+            <form onSubmit={handleRegister}>
+                <div>
+                    <label>Email: </label>
+                    <input
+                        type="email"
+                        placeholder="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required={true}
+                    />
+                </div>
+                <div>
+                    <label>Password: </label>
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required={true}
+                    />
+                </div>
+                <div>
+                    <label>Username: </label>
+                    <input
+                        type="text"
+                        placeholder="first name"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        required={true}
+                    />
+                </div>
+                <div>
+                    <label>First Name: </label>
+                    <input
+                        type="text"
+                        placeholder="first name"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                    />
+                </div>
+                <div>
+                    <label>First Name: </label>
+                    <input
+                        type="text"
+                        placeholder="last name"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                    />
+                </div>
+                <button type="submit">Register</button>
+                <h3>{detail}</h3>
+            </form>
+        </div>
+    );
 };
 
 export default RegisterForm;

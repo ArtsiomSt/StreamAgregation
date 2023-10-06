@@ -1,6 +1,7 @@
 import {useNavigate} from "react-router-dom";
 import React, {useEffect, useState} from "react";
 import {bodyRequestWithAuth, bodyRequest, deleteRequestWithAuth, getRequestWithAuth} from "../utils/requests";
+import NavBar from "./navbar"
 
 
 const StreamersComponent = () => {
@@ -83,6 +84,7 @@ const StreamersComponent = () => {
     updateAction()
     return (
         <div>
+            <NavBar />
             <div>
                 <form onSubmit={handleSearch}>
                     <div>

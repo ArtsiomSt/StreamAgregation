@@ -23,5 +23,5 @@ async def get_live_subscribed_streams(db: TwitchRelationalManager, parser: Twitc
                 followers = await db.get_users_followed_to_streamer(stream.user.twitch_user_id)
                 followers_emails = list(map(lambda user: user.email, followers))
                 email_body = f"Streamer {stream.user.display_name} has just started translation {stream.stream_title}"
-                await send_email_notification(followers_emails, email_body)
+                await send_email_notification(followers_emails, email_body, "Stream Started Notification")
                 await db.save_notifications(followers, stream)
