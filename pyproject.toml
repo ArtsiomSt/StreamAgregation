@@ -1,2 +1,10 @@
 [tool.black]
 line-length = 120
+
+[tool.pytest.ini_options]
+pythonpath = [
+    './src/tests/',
+    './src/tests/test_app',
+    './src/tests/test_twitch'
+]
+asyncio_mode='auto'

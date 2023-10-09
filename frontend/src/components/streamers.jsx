@@ -1,6 +1,7 @@
 import {useNavigate} from "react-router-dom";
 import React, {useEffect, useState} from "react";
 import {bodyRequestWithAuth, bodyRequest, deleteRequestWithAuth, getRequestWithAuth} from "../utils/requests";
+import Popup from "../utils/popup";
 import NavBar from "./navbar"
 
 
@@ -9,8 +10,19 @@ const StreamersComponent = () => {
     const [data, setData] = useState([]);
     const [subscriptions, setSubscriptions] = useState([]);
     const [search, setSearch] = useState('');
+    const [showPopup, setShowPopup] = useState(false);
+    const [popupContent, setPopupContent] = useState("");
 
     const navigate = useNavigate();
+
+    const handleClick = () => {
+        setShowPopup(true);
+    };
+
+    const handleClose = () => {
+        setShowPopup(false);
+    };
+
     const getStreamers = async (pageNumber, search = '') => {
         try {
             const body = {"paginate_by": 20, "page_num": pageNumber - 1};
@@ -36,8 +48,8 @@ const StreamersComponent = () => {
 
     const getSubscriptions = async () => {
         try {
-            const response = await getRequestWithAuth('/twitch/user/subscriptions')
-            setSubscriptions(await response.json())
+            const response = await getRequestWithAuth('/twitch/user/subscriptions');
+            setSubscriptions(await response.json());
         } catch (error) {
             if (error === 'noAuth') {
                 navigate('/login')
@@ -46,16 +58,23 @@ const StreamersComponent = () => {
     }
     const handleSubscription = async (streamer_id, method) => {
         try {
-            if (method==='subscribe'){
-                const response = await getRequestWithAuth('twitch/users/subscribe/' + streamer_id)
+            if (method === 'subscribe') {
+                const response = await getRequestWithAuth('twitch/users/subscribe/' + streamer_id);
+                console.log(response);
+                if (response.status === 403) {
+                    const data = await response.json()
+                    setPopupContent(data.detail)
+                    setShowPopup(true)
+                    return
+                }
             }
-            if (method==='unsubscribe'){
-                const response = await deleteRequestWithAuth('twitch/users/subscribe/' + streamer_id)
+            if (method === 'unsubscribe') {
+                const response = await deleteRequestWithAuth('twitch/users/subscribe/' + streamer_id);
             }
-            const actions = {'subscribe': 'unsubscribe', 'unsubscribe': 'subscribe'}
+            const actions = {'subscribe': 'unsubscribe', 'unsubscribe': 'subscribe'};
             data.forEach(streamer => {
-                if (streamer.twitch_user_id === streamer_id){
-                    streamer.action = actions[streamer.action]
+                if (streamer.twitch_user_id === streamer_id) {
+                    streamer.action = actions[streamer.action];
                 }
             })
             await getSubscriptions();
@@ -84,7 +103,7 @@ const StreamersComponent = () => {
     updateAction()
     return (
         <div>
-            <NavBar />
+            <NavBar/>
             <div>
                 <form onSubmit={handleSearch}>
                     <div>
@@ -102,14 +121,21 @@ const StreamersComponent = () => {
             </div>
             <br/>
             <h4>Streamers</h4>
+            <hr/>
+            {showPopup && (
+                <div>
+                    <Popup content={popupContent} setActive={setShowPopup}/>
+                </div>
+            )}
             {data.map((item) => (
                 <div>
                     <ol className="list-group list-groupd">
-                        <li className="list-group-item d-flex justify-content-between align-items-start">
+                        <li className="d-flex justify-content-between align-items-start">
                             <div className="ms-2 me-auto">
                                 <div className="fw-bold">{item.id}</div>
                                 <div className="fw-bold">Display name: {item.display_name}, login : {item.login}</div>
                                 {item.description}
+                                <hr/>
                             </div>
                             <a onClick={() => handleSubscription(item.twitch_user_id, item.action)} href="#"><span
                                 className="badge bg-primary rounded-pill">{item.action}</span></a>

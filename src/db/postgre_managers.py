@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 
 from auth.exceptions import AuthException
 from auth.models import User
@@ -30,7 +30,9 @@ from db.database import get_db_session
 class RelationalManager:
     db: AsyncSession = None
 
-    async def connect_to_database(self) -> None:
+    async def connect_to_database(self, session: Optional[AsyncSession] = None) -> None:
+        if session is not None:
+            self.db = session
         self.db = await get_db_session()
 
     async def close_database_connection(self) -> None:

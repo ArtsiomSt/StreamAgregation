@@ -120,6 +120,8 @@ async def get_parsed_users(db: TwitchDb, params: TwitchUserParams = Depends()):
 
 @twitch_router.get("/users/subscribe/{twitch_user_id}")
 async def subscribe_to_twitch_user(twitch_user_id: int, db: TwitchPdb, user: CurrentUser):
+    if not user.is_email_verified:
+        raise HTTPException(detail='Email is not verified', status_code=403)
     result = await db.subscribe_user_to_streamer(user, twitch_user_id)
     if result:
         return JSONResponse({"detail": "subscribed"}, status_code=200)

@@ -117,6 +117,20 @@ services:
       - "5555:5432"
     networks:
       - botnet
+  test_pgdb:
+    image: postgres:12
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgrespostgres
+      - POSTGRES_PORT=6000
+      - POSTGRES_HOST=test_pgdb
+      - POSTGRES_DB=streamaggr
+    ports:
+      - "6000:6000"
+    networks:
+      - botnet
 
 networks:
   botnet:

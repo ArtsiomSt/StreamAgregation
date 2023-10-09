@@ -22,7 +22,7 @@ const NavBar = (props) => {
                         <li className="nav-item">
                             <a className="nav-link active" aria-current="page" href="/streamers">Streamers</a>
                         </li>
-                        {emailCookie != undefined && (
+                        {emailCookie !== undefined && (
                             <li className="nav-item">
                                 <a className="nav-link active" aria-current="" href="/profile">{emailCookie}</a>
                             </li>
@@ -40,7 +40,7 @@ const NavBar = (props) => {
                         <li className="nav-item">
                             <a className="nav-link active" aria-current="page">|</a>
                         </li>
-                        {emailCookie != undefined && (
+                        {emailCookie !== undefined && (
                             <li className="nav-item">
                                 <a className="nav-link active" aria-current="page" href="/logout">Sign Out</a>
                             </li>
