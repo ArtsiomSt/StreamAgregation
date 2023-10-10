@@ -1,0 +1,5 @@
+start of the test
+end of the test
+start of the test
+end of the test
+<ExceptionInfo HTTPException(status_code=400, detail='No user with such credentials') tblen=2><class 'fastapi.exceptions.HTTPException'>

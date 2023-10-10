@@ -11,6 +11,7 @@ services:
     depends_on:
       - db
       - kafka
+      - test_pgdb
     env_file:
       - env/backends.env
       - env/twitch.env
@@ -119,16 +120,12 @@ services:
       - botnet
   test_pgdb:
     image: postgres:12
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgrespostgres
-      - POSTGRES_PORT=6000
+      - POSTGRES_PORT=5432
       - POSTGRES_HOST=test_pgdb
-      - POSTGRES_DB=streamaggr
-    ports:
-      - "6000:6000"
+      - POSTGRES_DB=streamaggrtest
     networks:
       - botnet
 

@@ -1,10 +1,8 @@
 import asyncio
-from typing import AsyncGenerator
 
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
-from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -18,10 +16,10 @@ from twitch.dependencies import get_twitch_pdb
 db_settings = DataBaseConfig()
 metadata = Base.metadata
 
-db_url = f"postgresql+asyncpg://{db_settings.pg_user}:{db_settings.pg_password}@test_pgdb:6000/{db_settings.db_name}"
-engine = create_async_engine(db_url, echo=False, future=True)
+db_url = f"postgresql+asyncpg://{db_settings.pg_user}:{db_settings.pg_password}@test_pgdb:{db_settings.pg_port}/{db_settings.db_name}test"
+async_engine = create_async_engine(db_url, echo=False, future=True)
 
-async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+async_session = sessionmaker(async_engine, class_=AsyncSession, expire_on_commit=False)
 
 
 async def override_get_db_session():
@@ -50,15 +48,6 @@ app.dependency_overrides[get_twitch_pdb] = override_get_twitch_pdb
 app.dependency_overrides[get_auth_pdb] = override_get_auth_pdb
 
 
-@pytest.fixture(autouse=True, scope='session')
-async def prepare_database():
-    async with engine.begin() as conn:
-        await conn.run_sync(metadata.create_all)
-    yield
-    async with engine.begin() as conn:
-        await conn.run_sync(metadata.drop_all)
-
-
 @pytest.fixture(scope='session')
 def event_loop(request):
     """Create an instance of the default event loop for each test case."""
@@ -67,16 +56,19 @@ def event_loop(request):
     loop.close()
 
 
+@pytest_asyncio.fixture(autouse=True, scope='session')
+async def prepare_database():
+    async with async_engine.begin() as conn:
+        await conn.run_sync(metadata.create_all)
+    yield
+    async with async_engine.begin() as conn:
+        await conn.run_sync(metadata.drop_all)
+
+
 client = TestClient(app)
 
 
-@pytest.fixture(scope="session")
-async def ac() -> AsyncGenerator[AsyncClient, None]:
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        yield ac
-
-
-@pytest.fixture(scope="session")
+@pytest_asyncio.fixture(scope="function")
 async def auth_pgdb():
     manager = AuthRelationalManager()
     try:

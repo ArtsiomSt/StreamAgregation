@@ -33,6 +33,7 @@ class RelationalManager:
     async def connect_to_database(self, session: Optional[AsyncSession] = None) -> None:
         if session is not None:
             self.db = session
+            return
         self.db = await get_db_session()
 
     async def close_database_connection(self) -> None:
@@ -40,7 +41,7 @@ class RelationalManager:
 
 
 class AuthRelationalManager(RelationalManager):
-    async def save_one_user(self, user: UserRegisterScheme) -> ExtendedUserScheme:
+    async def save_one_user(self, user: UserRegisterScheme) -> ExtendedUserScheme:  # tested
         try:
             result = await self.db.execute(
                 select(User).filter(or_(User.username == user.username, User.email == user.email))
@@ -67,7 +68,7 @@ class AuthRelationalManager(RelationalManager):
         await self.db.refresh(user_model)
         return ExtendedUserScheme(**user_model.__dict__)
 
-    async def check_credentials(self, email: str, password: str) -> ExtendedUserScheme:
+    async def check_credentials(self, email: str, password: str) -> ExtendedUserScheme:  # tested
         try:
             result = await self.db.execute(select(User).filter_by(email=email))
             user = result.scalars().one()
@@ -78,7 +79,7 @@ class AuthRelationalManager(RelationalManager):
         else:
             raise HTTPException(status_code=400, detail="No user with such credentials")
 
-    async def get_one_user_by_email(self, email: str) -> ExtendedUserScheme:
+    async def get_one_user_by_email(self, email: str) -> ExtendedUserScheme:  # tested
         try:
             result = await self.db.execute(select(User).filter_by(email=email))
             user = result.scalars().one()
@@ -86,7 +87,7 @@ class AuthRelationalManager(RelationalManager):
             raise AuthException("Invalid subject")
         return ExtendedUserScheme(**user.__dict__)
 
-    async def change_user_profile(self, user: ExtendedUserScheme, new_user_data: UserScheme) -> UserScheme:
+    async def change_user_profile(self, user: ExtendedUserScheme, new_user_data: UserScheme) -> UserScheme:  # tested
         current_user = await self.get_one_user_by_email(user.email)
         await self.db.execute(
             update(User).where(User.id == current_user.id).values(
@@ -112,7 +113,7 @@ class TwitchRelationalManager(RelationalManager):
     async def get_test_message(self, message: str) -> Any:
         pass
 
-    async def save_one_stream(self, stream: TwitchStreamScheme) -> TwitchStreamScheme:
+    async def save_one_stream(self, stream: TwitchStreamScheme) -> TwitchStreamScheme:  # tested
         twitch_user = await self.save_one_user(stream.user)
         twitch_game = TwitchGameScheme(game_name=stream.game_name, twitch_game_id=stream.twitch_game_id)
         twitch_game = await self.save_one_game(twitch_game)
@@ -139,7 +140,7 @@ class TwitchRelationalManager(RelationalManager):
             await self.attach_tags_to_stream(stream, stream_tags)
         return stream
 
-    async def save_one_game(self, game: TwitchGameScheme) -> TwitchGameScheme:
+    async def save_one_game(self, game: TwitchGameScheme) -> TwitchGameScheme:  # tested
         if not game.twitch_game_id or not game.game_name:
             game.id = None
             return game
@@ -158,7 +159,7 @@ class TwitchRelationalManager(RelationalManager):
             game.id = twitch_game.id
         return game
 
-    async def save_one_user(self, user: TwitchUserScheme) -> TwitchUserScheme:
+    async def save_one_user(self, user: TwitchUserScheme) -> TwitchUserScheme:  # tested
         try:
             result = await self.db.execute(select(TwitchUser).filter_by(twitch_user_id=user.twitch_user_id).limit(1))
             current_db_user = result.scalars().one()
@@ -174,12 +175,12 @@ class TwitchRelationalManager(RelationalManager):
             user.id = twitch_user.id
         return user
 
-    async def get_followed_users(self) -> list[TwitchUserScheme]:
+    async def get_followed_users(self) -> list[TwitchUserScheme]:  # tested
         result = await self.db.execute(select(TwitchUser).join(UserSubscription).distinct())
         twitch_users = result.scalars().all()
         return [TwitchUserScheme(**user.__dict__) for user in twitch_users]
 
-    async def get_twitch_user(self, twitch_user_id: int) -> TwitchUserScheme:
+    async def get_twitch_user(self, twitch_user_id: int) -> TwitchUserScheme:  # tested
         try:
             result = await self.db.execute(select(TwitchUser).filter_by(twitch_user_id=twitch_user_id).limit(1))
             current_db_user = result.scalars().one()
@@ -187,7 +188,7 @@ class TwitchRelationalManager(RelationalManager):
             raise HTTPException(status_code=400, detail="No such streamer")
         return current_db_user
 
-    async def subscribe_user_to_streamer(self, user: ExtendedUserScheme, twitch_user_id: int) -> bool:
+    async def subscribe_user_to_streamer(self, user: ExtendedUserScheme, twitch_user_id: int) -> bool:  # tested
         result = await self.db.execute(
             select(UserSubscription).filter(
                 and_(UserSubscription.user_id == user.id, UserSubscription.twitch_user_id == twitch_user_id)
@@ -209,7 +210,7 @@ class TwitchRelationalManager(RelationalManager):
         await self.db.commit()
         return True
 
-    async def unsubscribe_user_from_streamer(self, user: ExtendedUserScheme, twitch_user_id: int) -> bool:
+    async def unsubscribe_user_from_streamer(self, user: ExtendedUserScheme, twitch_user_id: int) -> bool:  # tested
         result = await self.db.execute(
             select(UserSubscription).filter(
                 and_(UserSubscription.user_id == user.id, UserSubscription.twitch_user_id == twitch_user_id)
@@ -227,7 +228,7 @@ class TwitchRelationalManager(RelationalManager):
         await self.db.commit()
         return True
 
-    async def get_users_followed_to_streamer(self, twitch_user_id: int) -> list[ExtendedUserScheme]:
+    async def get_users_followed_to_streamer(self, twitch_user_id: int) -> list[ExtendedUserScheme]:  # tested
         query_subscribed_user_ids = select(UserSubscription.user_id).filter_by(twitch_user_id=twitch_user_id)
         result = await self.db.execute(select(User).where(User.id.in_(query_subscribed_user_ids)))
         users_followed_to_this_streamer = result.scalars().all()
