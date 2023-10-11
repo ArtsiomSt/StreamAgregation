@@ -1,6 +1,7 @@
 import os
 from datetime import datetime, timedelta
 from typing import Any, Union
+from uuid import uuid4
 
 from jose import jwt
 from passlib.context import CryptContext
@@ -57,3 +58,7 @@ def get_refreshed_access_token(refresh_token: str) -> str:
     except (jwt.JWTError, ValidationError) as e:
         raise AuthException("Could not validate credentials")
     return create_access_token(token_payload.subject)
+
+
+def create_confirm_token() -> str:
+    return str(uuid4())

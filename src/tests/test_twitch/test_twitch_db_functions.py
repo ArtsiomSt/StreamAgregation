@@ -2,23 +2,17 @@ import pytest
 
 from auth.schemas import ExtendedUserScheme
 from db.postgre_managers import TwitchRelationalManager
-from twitch.schemas import (
-    TwitchUser,
-    TwitchStream,
-    TwitchGame
-)
+from twitch.schemas import TwitchGame, TwitchStream, TwitchUser
 
 pytest_plugins = [
-    "tests.auth_fixtures",
-    'tests.twitch_fixtures',
+    "tests.fixtures_auth",
+    "tests.fixtures_twitch",
 ]
 
 
 @pytest.mark.asyncio
 async def test_save_one_user(
-        twitch_user_one: TwitchUser,
-        twitch_user_two: TwitchUser,
-        twitch_pgdb: TwitchRelationalManager
+    twitch_user_one: TwitchUser, twitch_user_two: TwitchUser, twitch_pgdb: TwitchRelationalManager
 ):
     saved_user = await twitch_pgdb.save_one_user(twitch_user_one)
     assert saved_user.twitch_user_id == twitch_user_one.twitch_user_id
@@ -50,9 +44,9 @@ async def test_save_one_stream(random_stream: TwitchStream, twitch_pgdb: TwitchR
 
 @pytest.mark.asyncio
 async def test_subscriptions(
-        twitch_user_one: TwitchUser,
-        register_user_extended: ExtendedUserScheme,
-        twitch_pgdb: TwitchRelationalManager,
+    twitch_user_one: TwitchUser,
+    register_user_extended: ExtendedUserScheme,
+    twitch_pgdb: TwitchRelationalManager,
 ):
     streamers_subscribers = await twitch_pgdb.get_users_followed_to_streamer(twitch_user_one.twitch_user_id)
     assert len(streamers_subscribers) == 0

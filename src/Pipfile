@@ -34,6 +34,7 @@ aioschedule = "==0.5.2"
 pytest = "*"
 httpx = "*"
 pytest-asyncio = "*"
+pytest-mock = "*"
 
 [dev-packages]
 

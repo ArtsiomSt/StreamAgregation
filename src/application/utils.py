@@ -26,9 +26,9 @@ def get_available_params(params: dict, available_params: list[str]) -> dict:
     return result
 
 
-async def send_email_notification(recipients_list: list[str], body: str, subject: str) -> None:
+async def send_email_notification(recipients_list: list[str], body: str, subject: str = "Stream Started") -> None:
     message = MessageSchema(
-        subject="Stream Started Notification",
+        subject=subject,
         recipients=recipients_list,
         body=body,
         subtype=MessageType.plain,

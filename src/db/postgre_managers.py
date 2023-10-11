@@ -273,7 +273,7 @@ class TwitchRelationalManager(RelationalManager):
             select(TwitchStream)
             .join(TwitchUser, TwitchStream.user_id == TwitchUser.id)
             .options(joinedload(TwitchStream.user))
-            .join(TwitchGame, TwitchStream.game_id == TwitchGame.id)
+            .join(TwitchGame, TwitchStream.game_id == TwitchGame.id, isouter=True)
             .options(joinedload(TwitchStream.game))
             .options(joinedload(TwitchStream.tags))
             .offset(page_num * paginate_by)
@@ -285,8 +285,8 @@ class TwitchRelationalManager(RelationalManager):
                 id=stream.id,
                 twitch_id=stream.twitch_id,
                 user=TwitchUserScheme(**stream.user.__dict__),
-                twitch_game_id=stream.game.twitch_game_id,
-                game_name=stream.game.game_name,
+                twitch_game_id=stream.game.twitch_game_id if stream.game else None,
+                game_name=stream.game.game_name if stream.game else None,
                 stream_title=stream.stream_title,
                 viewer_count=stream.viewer_count,
                 tags=[tag.tag_name for tag in stream.tags],

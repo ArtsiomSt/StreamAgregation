@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 import pytest_asyncio
-from fastapi.testclient import TestClient
+from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -48,7 +48,7 @@ app.dependency_overrides[get_twitch_pdb] = override_get_twitch_pdb
 app.dependency_overrides[get_auth_pdb] = override_get_auth_pdb
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def event_loop(request):
     """Create an instance of the default event loop for each test case."""
     loop = asyncio.get_event_loop_policy().new_event_loop()
@@ -56,7 +56,7 @@ def event_loop(request):
     loop.close()
 
 
-@pytest_asyncio.fixture(autouse=True, scope='session')
+@pytest_asyncio.fixture(autouse=True, scope="session")
 async def prepare_database():
     async with async_engine.begin() as conn:
         await conn.run_sync(metadata.create_all)
@@ -65,7 +65,10 @@ async def prepare_database():
         await conn.run_sync(metadata.drop_all)
 
 
-client = TestClient(app)
+@pytest_asyncio.fixture(scope="session")
+async def client():
+    async with AsyncClient(app=app, base_url="http://fastapi:8000/") as aclient:
+        yield aclient
 
 
 @pytest_asyncio.fixture(scope="function")
@@ -78,7 +81,7 @@ async def auth_pgdb():
         await manager.close_database_connection()
 
 
-@pytest_asyncio.fixture(scope='function')
+@pytest_asyncio.fixture(scope="function")
 async def twitch_pgdb():
     manager = TwitchRelationalManager()
     try:

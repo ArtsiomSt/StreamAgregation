@@ -1,12 +1,12 @@
+import json
 import random
+from typing import Generator
 
 import pytest_asyncio
 
-from twitch.schemas import (
-    TwitchGame,
-    TwitchStream,
-    TwitchUser,
-)
+from application.app import app
+from twitch.dependencies import get_twitch_parser
+from twitch.schemas import TwitchGame, TwitchStream, TwitchUser
 
 stream_titles = [
     "The Art of Programming",
@@ -18,7 +18,7 @@ stream_titles = [
     "Cybersecurity Fundamentals",
     "Cloud Computing Essentials",
     "AI and Ethics",
-    "Blockchain Revolution"
+    "Blockchain Revolution",
 ]
 
 tags = [
@@ -31,7 +31,7 @@ tags = [
     "cybersecurity",
     "cloud computing",
     "artificial intelligence",
-    "blockchain"
+    "blockchain",
 ]
 
 generated_stream_ids = []
@@ -41,13 +41,13 @@ generated_stream_ids = []
 async def twitch_user_one() -> TwitchUser:
     return TwitchUser(
         twitch_user_id=11111111,
-        login='twitch_user_one',
-        display_name='TwitchUserOne',
-        type='',
-        description='Lorem Ipsum',
+        login="twitch_user_one",
+        display_name="TwitchUserOne",
+        type="",
+        description="Lorem Ipsum",
         view_count=0,
-        broadcaster_type='partner',
-        email='twitch_user_one@mail.com'
+        broadcaster_type="partner",
+        email="twitch_user_one@mail.com",
     )
 
 
@@ -55,20 +55,20 @@ async def twitch_user_one() -> TwitchUser:
 async def twitch_user_two() -> TwitchUser:
     return TwitchUser(
         twitch_user_id=2222222,
-        login='twitch_user_two',
-        display_name='TwitchUserTwo',
-        type='',
-        description='Lorem Ipsum',
+        login="twitch_user_two",
+        display_name="TwitchUserTwo",
+        type="",
+        description="Lorem Ipsum",
         view_count=0,
-        broadcaster_type='partner',
-        email='twitch_user_two@mail.com'
+        broadcaster_type="partner",
+        email="twitch_user_two@mail.com",
     )
 
 
 @pytest_asyncio.fixture()
 async def twitch_game():
     return TwitchGame(
-        game_name='TwitchGame',
+        game_name="TwitchGame",
         twitch_game_id=12121212,
     )
 
@@ -89,3 +89,20 @@ async def random_stream(twitch_user_one: TwitchUser, twitch_user_two: TwitchUser
         viewer_count=1000,
         tags=random.choices(tags, k=4),
     )
+
+
+class TwitchParserMocked:
+    def get_streams(self, *args, **kwargs) -> Generator[TwitchStream, None, None]:
+        with open("tests/test_twitch/requests_twitch.json", "r") as json_twitch:
+            json_data: dict = json.loads(json_twitch.read())
+        yield from [TwitchStream(**stream) for stream in json_data["streams"]["mock-response"]]
+
+
+Parser = TwitchParserMocked()
+
+
+def override_get_twitch_parser() -> TwitchParserMocked:
+    return Parser
+
+
+app.dependency_overrides[get_twitch_parser] = override_get_twitch_parser

@@ -1,21 +1,20 @@
 from typing import Annotated
-from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, HTTPException, Depends, Request, status
 
 from application.cache import RedisCacheManager
 from application.dependecies import get_cache_manager
 from application.utils import send_email_notification
 from auth.dependencis import CurrentUser, UserPdb
 from auth.schemas import ExtendedUserScheme, RefreshToken, UserLoginData, UserRegisterScheme, UserScheme, TokenScheme
-from auth.utils import create_access_token, create_refresh_token, get_refreshed_access_token
+from auth.utils import create_access_token, create_refresh_token, get_refreshed_access_token, create_confirm_token
 
 auth_router = APIRouter(prefix="/auth")
 
 CacheMngr = Annotated[RedisCacheManager, Depends(get_cache_manager)]
 
 
-@auth_router.post("/register", response_model=ExtendedUserScheme)
+@auth_router.post("/register", response_model=ExtendedUserScheme, status_code=status.HTTP_201_CREATED)
 async def register(user_data: UserRegisterScheme, db: UserPdb):
     created_user = await db.save_one_user(user_data)
     return created_user
@@ -55,7 +54,7 @@ async def change_profile_info(user: CurrentUser, new_user_data: UserScheme, db: 
 
 @auth_router.get("/email/send-verify-email")
 async def send_verify_email_message(user: CurrentUser, cache: CacheMngr, request: Request):
-    confirm_token = str(uuid4())
+    confirm_token = create_confirm_token()
     await cache.save_to_cache(confirm_token, 300, user.email)
     await send_email_notification(
         [user.email],

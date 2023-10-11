@@ -1,12 +1,13 @@
 import pytest
+from fastapi.testclient import TestClient
+from httpx import AsyncClient
 
-from tests.conftest import client
-from db.postgre_managers import TwitchRelationalManager, AuthRelationalManager
+from db.postgre_managers import AuthRelationalManager, TwitchRelationalManager
 
 
 @pytest.mark.asyncio
-async def test_greeting():
-    response = client.get('')
+async def test_greeting(client: AsyncClient):
+    response = await client.get("")
     assert response.status_code == 200
     assert response.json() == {"message": "success"}
 

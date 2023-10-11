@@ -6,7 +6,7 @@ from auth.schemas import UserRegisterScheme, UserScheme
 from db.postgre_managers import AuthRelationalManager
 
 pytest_plugins = [
-    "tests.auth_fixtures",
+    "tests.fixtures_auth",
 ]
 
 
@@ -39,14 +39,12 @@ async def test_get_on_user_by_email(register_user: UserRegisterScheme, auth_pgdb
     assert user_from_db.email == register_user.email
     assert user_from_db.username == register_user.username
     with pytest.raises(AuthException):
-        await auth_pgdb.get_one_user_by_email(register_user.email+"no_such_mail")
+        await auth_pgdb.get_one_user_by_email(register_user.email + "no_such_mail")
 
 
 @pytest.mark.asyncio
 async def test_change_user_profile(
-        register_user: UserRegisterScheme,
-        auth_pgdb: AuthRelationalManager,
-        new_user_profile: UserScheme
+    register_user: UserRegisterScheme, auth_pgdb: AuthRelationalManager, new_user_profile: UserScheme
 ):
     user_from_db = await auth_pgdb.get_one_user_by_email(register_user.email)
     await auth_pgdb.change_user_profile(user_from_db, new_user_profile)

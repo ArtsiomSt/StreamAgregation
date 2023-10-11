@@ -62,8 +62,8 @@ class TwitchStreamParams(PaginateFields):
 class TwitchStream(CustomModel):
     twitch_id: int
     user: TwitchUser
-    twitch_game_id: int | str
-    game_name: str
+    twitch_game_id: Optional[int | str] = None
+    game_name: Optional[str] = None
     stream_title: str
     viewer_count: int
     tags: Optional[list[str]]
