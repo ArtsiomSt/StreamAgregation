@@ -5,12 +5,9 @@ from uuid import uuid4
 
 from application.cache import RedisCacheManager
 from application.dependecies import get_cache_manager
-from application.schemas import ResponseFromDb
 from auth.dependencis import CurrentUser
 from brokers.producer import producer
 from core.enums import ObjectStatus
-from db import get_twitch_database
-from db.database_managers import TwitchDatabaseManager
 from db.postgre_managers import TwitchRelationalManager
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
@@ -18,7 +15,7 @@ from pydantic import ValidationError
 
 from .config import TwitchSettings
 from .dependencies import get_twitch_parser, get_twitch_pdb
-from .schemas import TaskStatus, TwitchStreamParams, TwitchUserParams, TwitchGame, TwitchUser, TwitchStreamerParams
+from .schemas import TaskStatus, TwitchStreamParams, TwitchGame, TwitchUser, TwitchStreamerParams
 from .service import TwitchParser
 from .tasks import get_live_subscribed_streams
 
@@ -26,7 +23,6 @@ twitch_router = APIRouter(prefix="/twitch")
 
 
 TwitchParserObject = Annotated[TwitchParser, Depends(get_twitch_parser)]
-TwitchDb = Annotated[TwitchDatabaseManager, Depends(get_twitch_database)]
 TwitchPdb = Annotated[TwitchRelationalManager, Depends(get_twitch_pdb)]
 CacheMngr = Annotated[RedisCacheManager, Depends(get_cache_manager)]
 settings = TwitchSettings()
@@ -105,19 +101,6 @@ async def check_task_status(task_id: str, cache: CacheMngr):
     return TaskStatus(task_id=task_id, task_status=ObjectStatus.NOT_EXISTS.name)
 
 
-@twitch_router.get("/user", response_model=ResponseFromDb)
-async def get_parsed_users(db: TwitchDb, params: TwitchUserParams = Depends()):
-    """View that stands for getting users from parsed streams from database"""
-
-    users = await db.get_users_by_filter({}, paginate_by=params.paginate_by, page_num=params.page_num)
-    return ResponseFromDb(
-        status=ObjectStatus.PROCESSED.name,
-        data=users,
-        paginate_by=params.paginate_by,
-        page_num=params.page_num,
-    )
-
-
 @twitch_router.get("/users/subscribe/{twitch_user_id}")
 async def subscribe_to_twitch_user(twitch_user_id: int, db: TwitchPdb, user: CurrentUser):
     if not user.is_email_verified:
@@ -158,9 +141,9 @@ async def get_streamers(db: TwitchPdb, params: TwitchStreamerParams) -> list[Twi
     return await db.get_streamers(params.paginate_by, params.page_num, params.search_streamer)
 
 
-@twitch_router.get('/user/subscriptions')
-async def get_users_subscriptions(db: TwitchPdb, user: CurrentUser) -> list[TwitchUser]:
-    return await db.get_users_subscriptions(user)
+@twitch_router.post('/user/subscriptions')
+async def get_users_subscriptions(db: TwitchPdb, user: CurrentUser, params: TwitchStreamerParams) -> list[TwitchUser]:
+    return await db.get_users_subscriptions(user, params.paginate_by, params.page_num, params.search_streamer)
 
 
 @twitch_router.get("/test")

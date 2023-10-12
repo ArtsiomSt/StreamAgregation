@@ -10,7 +10,7 @@ class CustomModel(BaseModel):
 
 
 class PaginateFields(BaseModel):
-    paginate_by: int = Field(10, gt=-1, le=20)
+    paginate_by: int = Field(10, gt=-1, le=100)
     page_num: int = Field(0, gt=-1)
 
 

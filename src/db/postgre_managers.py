@@ -315,15 +315,20 @@ class TwitchRelationalManager(RelationalManager):
             for streamer in result.scalars().all()
         ]
 
-    async def get_users_subscriptions(self, user: ExtendedUserScheme) -> list[TwitchUserScheme]:
+    async def get_users_subscriptions(self, user: ExtendedUserScheme,
+                                      paginate_by: int = 100,
+                                      page_num: int = 0,
+                                      search: str = '') -> list[TwitchUserScheme]:
         result = await self.db.execute(
             select(TwitchUser)
             .join(UserSubscription, TwitchUser.id == UserSubscription.twitch_db_user_id)
             .options(joinedload(TwitchUser.subscribers))
-            .where(UserSubscription.user_id == user.id)
+            .where(
+                and_(UserSubscription.user_id == user.id,
+                     or_(TwitchUser.display_name.like(f'%{search}%'), TwitchUser.login.like(f'%{search}%'))))
+            .offset(paginate_by*page_num).limit(paginate_by)
         )
         return [
             TwitchUserScheme(**streamer.__dict__)
             for streamer in result.scalars().unique().all()
         ]
-

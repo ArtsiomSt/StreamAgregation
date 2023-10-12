@@ -17,7 +17,7 @@ const NavBar = (props) => {
                 <div className="collapse navbar-collapse" id="navbarNav">
                     <ul className="navbar-nav">
                         <li className="nav-item">
-                            <a className="nav-link active" aria-current="page" href="">Home</a>
+                            <a className="nav-link active" aria-current="page" href="/subscriptions">My Subscriptions</a>
                         </li>
                         <li className="nav-item">
                             <a className="nav-link active" aria-current="page" href="/streamers">Streamers</a>

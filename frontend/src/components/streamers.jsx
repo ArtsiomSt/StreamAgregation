@@ -48,7 +48,9 @@ const StreamersComponent = () => {
 
     const getSubscriptions = async () => {
         try {
-            const response = await getRequestWithAuth('/twitch/user/subscriptions');
+            const response = await bodyRequestWithAuth(
+                '/twitch/user/subscriptions', {"paginate_by": 100, "page_num": 0}, "POST"
+            );
             setSubscriptions(await response.json());
         } catch (error) {
             if (error === 'noAuth') {
@@ -60,7 +62,6 @@ const StreamersComponent = () => {
         try {
             if (method === 'subscribe') {
                 const response = await getRequestWithAuth('twitch/users/subscribe/' + streamer_id);
-                console.log(response);
                 if (response.status === 403) {
                     const data = await response.json()
                     setPopupContent(data.detail)

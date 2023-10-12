@@ -9,6 +9,7 @@ import ProfileComponent from "./components/profile";
 import LogOut from "./components/signout";
 import StreamersComponent from "./components/streamers";
 import HelloComponent from "./components/hello";
+import SubscriptionsComponent from "./components/subscriptions";
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
           <Route path="logout" element={<LogOut />} />
           <Route path="streamers" element={<StreamersComponent />} />
           <Route path="" element={<HelloComponent />} />
+          <Route path="subscriptions" element={<SubscriptionsComponent />} />
       </Routes>
     </BrowserRouter>
   );

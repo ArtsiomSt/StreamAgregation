@@ -1,5 +1,4 @@
 from auth.routers import auth_router
-from db import twitch_db
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
@@ -21,13 +20,12 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup():
-    settings = Settings()
-    await twitch_db.connect_to_database(path=settings.mongo_url, db_name=settings.twitch_db_name)
+    pass
 
 
 @app.on_event("shutdown")
 async def shutdown():
-    await twitch_db.close_database_connection()
+    pass
 
 
 @app.exception_handler(Exception)
