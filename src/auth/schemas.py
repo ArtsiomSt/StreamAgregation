@@ -60,4 +60,4 @@ class TokenScheme(BaseModel):
         if re.match(pattern, value):
             return value
         else:
-            raise ValueError("Not valid token")
+            raise ValueError("Not valid refresh token")
