@@ -1,4 +1,5 @@
 from typing import Any, Optional
+from collections import Counter
 
 from auth.exceptions import AuthException
 from auth.models import User
@@ -326,9 +327,101 @@ class TwitchRelationalManager(RelationalManager):
             .where(
                 and_(UserSubscription.user_id == user.id,
                      or_(TwitchUser.display_name.like(f'%{search}%'), TwitchUser.login.like(f'%{search}%'))))
-            .offset(paginate_by*page_num).limit(paginate_by)
+            .offset(paginate_by * page_num).limit(paginate_by)
         )
         return [
             TwitchUserScheme(**streamer.__dict__)
             for streamer in result.scalars().unique().all()
         ]
+
+    async def get_most_popular_streamers(self, streamers_amount: int = 5) -> list[TwitchUserScheme]:
+        users_with_subscriptions = (
+            select(TwitchUser.id.label('twitch_user_id'), func.count(TwitchUser.id).label('subscriptions_amount'))
+            .join(UserSubscription, TwitchUser.id == UserSubscription.twitch_db_user_id)
+            .group_by(TwitchUser.id)
+        )
+        ordered_by_subscribers = (
+            select(users_with_subscriptions.c.twitch_user_id)
+            .order_by(users_with_subscriptions.c.subscriptions_amount)
+            .limit(streamers_amount)
+        )
+        popular_streamers = select(TwitchUser).where(TwitchUser.id.in_(ordered_by_subscribers))
+        result = await self.db.execute(popular_streamers)
+        return [
+            TwitchUserScheme(**streamer.__dict__)
+            for streamer in result.scalars().all()
+        ]
+
+    async def get_users_favourite_games(self, user: ExtendedUserScheme = None):
+        users_subscriptions = (
+            select(UserSubscription.twitch_user_id.label('twitch_user_id'))
+            .where(UserSubscription.user_id == 3)
+        )
+        users_subs = (await self.db.execute(users_subscriptions)).scalars().all()
+        users_subs = [int(sub) for sub in users_subs]
+        users_subscriptions_games = await self.get_streamers_game(users_subs)
+        counted_games = Counter([game[1] for game in users_subscriptions_games])
+        print(counted_games)
+
+    async def get_streamers_game(self,
+                                 target_streamers: Optional[list[int]] = None,
+                                 target_games: Optional[list[TwitchGameScheme]] = None) -> list[tuple[int, int]]:
+        """
+        Return list of tuples [int, int] or
+        tuple[StreamerId, StreamersFavouriteGameId]
+        """
+        twitch_user_all_games = (
+            select(
+                TwitchUser.id.label('id'),
+                TwitchUser.twitch_user_id.label('twitch_user_id'),
+                TwitchGame.id.label('game_id'),
+                TwitchGame.game_name.label('game_name')
+            )
+            .join(TwitchStream, TwitchUser.id == TwitchStream.user_id)
+            .join(TwitchGame, TwitchStream.game_id == TwitchGame.id)
+        )
+        if target_streamers:
+            twitch_user_all_games = twitch_user_all_games.where(
+                TwitchUser.twitch_user_id.in_(target_streamers)
+            ).alias('user_games')
+        else:
+            twitch_user_all_games = twitch_user_all_games.alias('user_games')
+        twitch_users_games_count = (
+            select(twitch_user_all_games, func.count(twitch_user_all_games.c.game_id).label('streams_this_game'))
+            .group_by(
+                twitch_user_all_games.c.id,
+                twitch_user_all_games.c.twitch_user_id,
+                twitch_user_all_games.c.game_id,
+                twitch_user_all_games.c.game_name
+            ).alias('games_count_all')
+        )
+        streamers_favourite_game_count = (
+            select(
+                twitch_users_games_count.c.id.label('id'),
+                twitch_users_games_count.c.twitch_user_id,
+                func.max(twitch_users_games_count.c.streams_this_game).label('best_stream_count')
+            )
+            .group_by(
+                twitch_users_games_count.c.id,
+                twitch_users_games_count.c.twitch_user_id,
+            )
+        ).alias('games_best_counts')
+        streamers_favourite_game = (
+            select(twitch_users_games_count)
+            .join(
+                streamers_favourite_game_count,
+                and_(
+                    twitch_users_games_count.c.id == streamers_favourite_game_count.c.id,
+                    twitch_users_games_count.c.streams_this_game == streamers_favourite_game_count.c.best_stream_count
+                )
+            )
+        )
+        result = await self.db.execute(streamers_favourite_game)
+        if target_games:
+            target_games_ids = [game.id for game in target_games]
+            return [(res[1], res[2]) for res in result.all() if res[2] in target_games_ids]
+        else:
+            return [(res[1], res[2]) for res in result.all() if res[2]]
+
+    async def get_users_recommendations(self, user: ExtendedUserScheme):
+        pass

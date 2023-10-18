@@ -146,6 +146,16 @@ async def get_users_subscriptions(db: TwitchPdb, user: CurrentUser, params: Twit
     return await db.get_users_subscriptions(user, params.paginate_by, params.page_num, params.search_streamer)
 
 
+@twitch_router.get('/streamers/popular')
+async def get_popular_streamers(db: TwitchPdb) -> list[TwitchUser]:
+    return await db.get_most_popular_streamers()
+
+
+@twitch_router.get('/user/recommendations')
+async def get_users_recommendations(db: TwitchPdb):
+    await db.get_users_favourite_games()
+
+
 @twitch_router.get("/test")
 async def test_twitch(db: TwitchPdb):
     res = await db.get_most_popular_twitch_games()
