@@ -152,8 +152,14 @@ async def get_popular_streamers(db: TwitchPdb) -> list[TwitchUser]:
 
 
 @twitch_router.get('/user/recommendations')
-async def get_users_recommendations(db: TwitchPdb):
-    await db.get_users_favourite_games()
+async def get_users_recommendations(db: TwitchPdb, user: CurrentUser, cache: CacheMngr) -> list[TwitchUser]:
+    key_for_cache = f'{user.id}-reccom'
+    cached_recommendations = await cache.get_object_from_cache(key_for_cache)
+    if cached_recommendations is not None:
+        return cached_recommendations
+    users_recommendations = await db.get_users_recommendations(user)
+    await cache.save_to_cache(key_for_cache, 300, users_recommendations, True)
+    return users_recommendations
 
 
 @twitch_router.get("/test")

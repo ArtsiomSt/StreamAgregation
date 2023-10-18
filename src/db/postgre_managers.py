@@ -1,12 +1,14 @@
-from typing import Any, Optional
+import random
 from collections import Counter
+from typing import Any, Optional
+
 
 from auth.exceptions import AuthException
 from auth.models import User
 from auth.schemas import ExtendedUserScheme, UserRegisterScheme, UserScheme
 from auth.utils import get_hashed_password, verify_password
 from fastapi import HTTPException
-from sqlalchemy import and_, insert, or_, select, func, delete, update
+from sqlalchemy import and_, insert, or_, select, func, delete, update, not_
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -352,16 +354,18 @@ class TwitchRelationalManager(RelationalManager):
             for streamer in result.scalars().all()
         ]
 
-    async def get_users_favourite_games(self, user: ExtendedUserScheme = None):
+    async def get_users_favourite_games(self, user: ExtendedUserScheme, target_games_amount: int = 3):
         users_subscriptions = (
             select(UserSubscription.twitch_user_id.label('twitch_user_id'))
-            .where(UserSubscription.user_id == 3)
+            .where(UserSubscription.user_id == user.id)
         )
         users_subs = (await self.db.execute(users_subscriptions)).scalars().all()
         users_subs = [int(sub) for sub in users_subs]
         users_subscriptions_games = await self.get_streamers_game(users_subs)
         counted_games = Counter([game[1] for game in users_subscriptions_games])
-        print(counted_games)
+        top_users_games = [res[0] for res in counted_games.most_common(target_games_amount)]
+        result = await self.db.execute(select(TwitchGame).where(TwitchGame.id.in_(top_users_games)))
+        return [TwitchGameScheme(**game.__dict__) for game in result.scalars().all()]
 
     async def get_streamers_game(self,
                                  target_streamers: Optional[list[int]] = None,
@@ -423,5 +427,27 @@ class TwitchRelationalManager(RelationalManager):
         else:
             return [(res[1], res[2]) for res in result.all() if res[2]]
 
-    async def get_users_recommendations(self, user: ExtendedUserScheme):
-        pass
+    async def get_users_recommendations(self, user: ExtendedUserScheme, recommendations_amount: int = 10):
+        users_games = await self.get_users_favourite_games(user)
+        streamers_with_that_game = await self.get_streamers_game(target_games=users_games)
+        streamers_id_with_that_game = [res[0] for res in streamers_with_that_game]
+        users_subscribed_streamers = await self.db.execute(
+            select(UserSubscription.twitch_db_user_id).where(UserSubscription.user_id == 3)
+        )
+        result = await self.db.execute(
+            select(TwitchUser)
+            .where(
+                and_(
+                    TwitchUser.twitch_user_id.in_(streamers_id_with_that_game),
+                    not_(TwitchUser.id.in_(users_subscribed_streamers.scalars().all()))
+                )
+            )
+        )
+        target_streamers = result.scalars().all()
+        if recommendations_amount > len(target_streamers):
+            recommendations_amount = len(target_streamers)
+        result_recommendations = random.sample(target_streamers, recommendations_amount)
+        return [
+            TwitchUserScheme(**streamer.__dict__)
+            for streamer in result_recommendations
+        ]

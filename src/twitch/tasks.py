@@ -6,7 +6,6 @@ from twitch.service import TwitchParser
 
 async def get_live_subscribed_streams(db: TwitchRelationalManager, parser: TwitchParser) -> None:
     followed_users = await db.get_followed_users()
-    followed_users = followed_users[:200]
     batched_followed_users = [
         list(map(lambda user: user.twitch_user_id, followed_users[i: i + 100]))
         for i in range(0, len(followed_users), 100)
