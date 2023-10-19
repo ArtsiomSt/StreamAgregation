@@ -32,8 +32,10 @@ async def get_current_user(db: UserPdb, token: str = Depends(reusable_oauth)) ->
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[ALGORITHM])
         token_payload = TokenPayload(subject=payload.get("sub"), expire=payload.get("exp"))
     except jwt.ExpiredSignatureError:
+        print('exp')
         raise AuthException("Token expired")
     except (jwt.JWTError, ValidationError):
+        print('valid')
         raise AuthException("Could not validate credentials")
     current_user = await db.get_one_user_by_email(token_payload.subject)
     return current_user

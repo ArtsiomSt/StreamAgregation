@@ -162,6 +162,11 @@ async def get_users_recommendations(db: TwitchPdb, user: CurrentUser, cache: Cac
     return users_recommendations
 
 
+@twitch_router.get('/user/games')
+async def get_my_top_games(db: TwitchPdb, user: CurrentUser) -> list[TwitchGame]:
+    return await db.get_users_favourite_games(user)
+
+
 @twitch_router.get("/test")
 async def test_twitch(db: TwitchPdb):
     res = await db.get_most_popular_twitch_games()
