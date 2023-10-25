@@ -5,6 +5,7 @@ from starlette.responses import JSONResponse
 from twitch.routers import twitch_router
 
 from .config import Settings
+from .tasks import divide
 
 app = FastAPI()
 app.include_router(twitch_router, tags=["twitch"])
@@ -45,3 +46,9 @@ async def handle_python_exceptions(request, exc):
 @app.get("/")
 def main():
     return {"message": "success"}
+
+
+@app.get('/task')
+async def task_end():
+    task = divide.delay(1, 2)
+    print(task.state)

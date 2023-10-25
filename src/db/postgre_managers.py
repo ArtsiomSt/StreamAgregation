@@ -1,7 +1,6 @@
 import random
 from collections import Counter
-from typing import Any, Optional
-
+from typing import Any, Optional, Union
 
 from auth.exceptions import AuthException
 from auth.models import User
@@ -318,7 +317,17 @@ class TwitchRelationalManager(RelationalManager):
             for streamer in result.scalars().all()
         ]
 
-    async def get_users_subscriptions(self, user: ExtendedUserScheme,
+    async def get_games(self, paginate_by: int = 30, page_num: int = 0, search: str = '') -> list[TwitchGameScheme]:
+        result = await self.db.execute(select(TwitchGame).where(
+            TwitchGame.game_name.like(f'%{search}%')).offset(
+            paginate_by * page_num).limit(paginate_by))
+        return [
+            TwitchGameScheme(**game.__dict__)
+            for game in result.scalars().all()
+        ]
+
+    async def get_users_subscriptions(self,
+                                      user: ExtendedUserScheme,
                                       paginate_by: int = 100,
                                       page_num: int = 0,
                                       search: str = '') -> list[TwitchUserScheme]:
@@ -450,4 +459,21 @@ class TwitchRelationalManager(RelationalManager):
         return [
             TwitchUserScheme(**streamer.__dict__)
             for streamer in result_recommendations
+        ]
+
+    async def get_streamers_by_game(self,
+                                    games: Union[TwitchGameScheme, list[TwitchGameScheme]],
+                                    paginate_by: int = 30,
+                                    page_num: int = 0) -> list[TwitchUserScheme]:
+        if not isinstance(games, list):
+            games = [games]
+        streamers = await self.get_streamers_game(target_games=games)
+        target_streamers = [el[0] for el in streamers]
+        result = await self.db.execute(
+            select(TwitchUser).where(TwitchUser.twitch_user_id.in_(target_streamers))
+            .offset(paginate_by*page_num).limit(paginate_by)
+        )
+        return [
+            TwitchUserScheme(**streamer.__dict__)
+            for streamer in result.scalars().all()
         ]

@@ -117,6 +117,51 @@ services:
       - POSTGRES_DB=streamaggrtest
     networks:
       - botnet
+  celery-worker:
+    build: src
+    command: celery -A application.celery_conf.celery worker -l info
+    volumes:
+      - ./src:/app
+    env_file:
+      - env/db.env
+      - env/backends.env
+      - env/twitch.env
+      - env/broker.env
+    depends_on:
+      - redis
+    networks:
+      - botnet
+  celery-beat:
+    build: src
+    command: celery -A application.celery_conf.celery beat -l info
+    volumes:
+      - ./src:/app
+    env_file:
+      - env/db.env
+      - env/backends.env
+      - env/twitch.env
+      - env/broker.env
+    depends_on:
+      - redis
+      - celery-worker
+    networks:
+      - botnet
+  celery-flower:
+    build: src
+    command: celery -A application.celery_conf.celery flower --port=5556
+    volumes:
+      - ./src:/app
+    env_file:
+      - env/db.env
+      - env/backends.env
+      - env/twitch.env
+      - env/broker.env
+    depends_on:
+      - redis
+    networks:
+      - botnet
+    ports:
+      - "5556:5556"
 
 networks:
   botnet:

@@ -49,3 +49,10 @@ async def test_subscribe_endpoint(client: AsyncClient, twitch_pgdb: TwitchRelati
             f"/twitch/users/subscribe/{stream['user']['twitch_user_id']}", headers=headers
         )
         assert response_unsub_second.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_mocked_request():
+    import requests
+    response = requests.get('value')
+    assert response == {"detail": "mocked_response"}

@@ -75,3 +75,7 @@ class TwitchUserParams(PaginateFields):
 
 class TwitchStreamerParams(PaginateFields):
     search_streamer: Optional[str] = ''
+
+
+class SearchScheme(BaseModel):
+    search_value: str

@@ -35,6 +35,7 @@ pytest = "*"
 httpx = "*"
 pytest-asyncio = "*"
 pytest-mock = "*"
+flower = "*"
 
 [dev-packages]
 

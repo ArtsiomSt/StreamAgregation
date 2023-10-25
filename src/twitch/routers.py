@@ -15,7 +15,7 @@ from pydantic import ValidationError
 
 from .config import TwitchSettings
 from .dependencies import get_twitch_parser, get_twitch_pdb
-from .schemas import TaskStatus, TwitchStreamParams, TwitchGame, TwitchUser, TwitchStreamerParams
+from .schemas import TaskStatus, TwitchStreamParams, TwitchGame, TwitchUser, TwitchStreamerParams, SearchScheme
 from .service import TwitchParser
 from .tasks import get_live_subscribed_streams
 
@@ -128,7 +128,7 @@ async def send_notifications(db: TwitchPdb, parser: TwitchParserObject):
 
 @twitch_router.get('/reports/popular')
 async def get_most_popular_streamer(db: TwitchPdb):
-    pass
+    return {"detail": "Not implemented"}
 
 
 @twitch_router.get('/games/most_popular')
@@ -167,9 +167,7 @@ async def get_my_top_games(db: TwitchPdb, user: CurrentUser) -> list[TwitchGame]
     return await db.get_users_favourite_games(user)
 
 
-@twitch_router.get("/test")
-async def test_twitch(db: TwitchPdb):
-    res = await db.get_most_popular_twitch_games()
-    for item in res:
-        print(item)
-    return {"message": "success"}
+@twitch_router.post('/games/streamers')
+async def find_streamers_by_game(db: TwitchPdb, search: SearchScheme) -> list[TwitchUser]:
+    target_games = await db.get_games(100, 0, search.search_value)
+    return await db.get_streamers_by_game(target_games)
