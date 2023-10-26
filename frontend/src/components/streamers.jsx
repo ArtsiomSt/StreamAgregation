@@ -12,6 +12,7 @@ const StreamersComponent = () => {
     const [search, setSearch] = useState('');
     const [showPopup, setShowPopup] = useState(false);
     const [popupContent, setPopupContent] = useState("");
+    const [searchGame, setSearchGame] = useState("");
 
     const navigate = useNavigate();
 
@@ -23,13 +24,18 @@ const StreamersComponent = () => {
         setShowPopup(false);
     };
 
-    const getStreamers = async (pageNumber, search = '') => {
+    const getStreamers = async (pageNumber, search = '', searchByGame = '') => {
         try {
             const body = {"paginate_by": 20, "page_num": pageNumber - 1};
             if (search) {
                 body['search_streamer'] = search;
             }
-            const response = await bodyRequest('/twitch/streamers', body);
+            let url = '/twitch/streamers'
+            if (searchByGame){
+                body['search_value'] = searchByGame;
+                url = '/twitch/games/streamers';
+            }
+            const response = await bodyRequest(url, body);
             setData(await response.json());
         } catch (error) {
             console.log(error);
@@ -39,11 +45,11 @@ const StreamersComponent = () => {
     const handleSearch = async (e) => {
         e.preventDefault();
         setCurrentPage(1);
-        await getStreamers(1, search);
+        await getStreamers(1, search, searchGame);
     }
     const handlePageClick = async (pageNumber) => {
         setCurrentPage(pageNumber);
-        await getStreamers(pageNumber, search);
+        await getStreamers(pageNumber, search, searchGame);
     };
 
     const getSubscriptions = async () => {
@@ -58,6 +64,12 @@ const StreamersComponent = () => {
             }
         }
     }
+
+    const handleSearchGame = async (e) => {
+        e.preventDefault();
+
+    }
+
     const handleSubscription = async (streamer_id, method) => {
         try {
             if (method === 'subscribe') {
@@ -108,12 +120,22 @@ const StreamersComponent = () => {
             <div>
                 <form onSubmit={handleSearch}>
                     <div>
-                        <label>Search: </label>
+                        <label>Streamer: </label>
                         <input
                             type="search"
                             placeholder="streamer"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
+                            required={false}
+                        />
+                    </div>
+                    <div>
+                        <label>Game: </label>
+                        <input
+                            type="search"
+                            placeholder="game"
+                            value={searchGame}
+                            onChange={(e) => setSearchGame(e.target.value)}
                             required={false}
                         />
                     </div>

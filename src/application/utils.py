@@ -1,4 +1,5 @@
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
+from fastapi_mail.errors import ConnectionErrors
 
 from .config import Settings
 
@@ -33,5 +34,8 @@ async def send_email_notification(recipients_list: list[str], body: str, subject
         body=body,
         subtype=MessageType.plain,
     )
-    fast_mail = FastMail(email_config)
-    await fast_mail.send_message(message)
+    try:
+        fast_mail = FastMail(email_config)
+        await fast_mail.send_message(message)
+    except ConnectionErrors:
+        print('TURN OF YOUR PROJECT VPN! Unable to send notifications')

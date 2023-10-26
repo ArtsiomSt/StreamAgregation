@@ -308,10 +308,19 @@ class TwitchRelationalManager(RelationalManager):
         result = await self.db.execute(get_best_games)
         return [TwitchGameScheme(**game.__dict__) for game in result.scalars().all()]
 
-    async def get_streamers(self, paginate_by: int = 30, page_num: int = 0, search: str = '') -> list[TwitchUserScheme]:
-        result = await self.db.execute(select(TwitchUser).where(
-            or_(TwitchUser.display_name.like(f'%{search}%'), TwitchUser.login.like(f'%{search}%'))).offset(
-            paginate_by * page_num).limit(paginate_by))
+    async def get_streamers(self,
+                            paginate_by: int = 30,
+                            page_num: int = 0,
+                            search: str = '',
+                            no_pagination: bool = False) -> list[TwitchUserScheme]:
+        query = select(TwitchUser).where(
+            or_(TwitchUser.display_name.like(f'%{search}%'), TwitchUser.login.like(f'%{search}%')))
+        if no_pagination:
+            if not search:
+                raise OverflowError("Unable to get all streamer without filter")
+        else:
+            query = query.offset(paginate_by * page_num).limit(paginate_by)
+        result = await self.db.execute(query)
         return [
             TwitchUserScheme(**streamer.__dict__)
             for streamer in result.scalars().all()
@@ -463,15 +472,23 @@ class TwitchRelationalManager(RelationalManager):
 
     async def get_streamers_by_game(self,
                                     games: Union[TwitchGameScheme, list[TwitchGameScheme]],
+                                    search_streamers: Optional[list[TwitchUserScheme]] = None,
                                     paginate_by: int = 30,
                                     page_num: int = 0) -> list[TwitchUserScheme]:
         if not isinstance(games, list):
             games = [games]
         streamers = await self.get_streamers_game(target_games=games)
+        search_streamers_ids = [streamer.twitch_user_id for streamer in search_streamers] if search_streamers else []
         target_streamers = [el[0] for el in streamers]
         result = await self.db.execute(
-            select(TwitchUser).where(TwitchUser.twitch_user_id.in_(target_streamers))
-            .offset(paginate_by*page_num).limit(paginate_by)
+            select(TwitchUser)
+            .where(
+                and_(
+                    TwitchUser.twitch_user_id.in_(target_streamers),
+                    TwitchUser.twitch_user_id.in_(search_streamers_ids) if search_streamers_ids else True
+                )
+            )
+            .offset(paginate_by * page_num).limit(paginate_by)
         )
         return [
             TwitchUserScheme(**streamer.__dict__)

@@ -169,5 +169,8 @@ async def get_my_top_games(db: TwitchPdb, user: CurrentUser) -> list[TwitchGame]
 
 @twitch_router.post('/games/streamers')
 async def find_streamers_by_game(db: TwitchPdb, search: SearchScheme) -> list[TwitchUser]:
+    target_streamers = None
+    if search.search_streamer:
+        target_streamers = await db.get_streamers(search=search.search_streamer, no_pagination=True)
     target_games = await db.get_games(100, 0, search.search_value)
-    return await db.get_streamers_by_game(target_games)
+    return await db.get_streamers_by_game(target_games, target_streamers, search.paginate_by, search.page_num)
