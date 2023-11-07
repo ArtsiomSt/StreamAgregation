@@ -11,7 +11,11 @@ class UserSubscription(Base):
     __tablename__ = "user_subscription"
 
     user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
-    twitch_db_user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("twitch_users.id", ondelete="CASCADE"), primary_key=True)
+    twitch_db_user_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("twitch_users.id", ondelete="CASCADE"),
+        primary_key=True
+    )
     twitch_user_id: Mapped[int] = mapped_column(BigInteger)
 
 

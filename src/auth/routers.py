@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Depends, Request, status
 from application.cache import RedisCacheManager
 from application.dependecies import get_cache_manager
 from application.utils import send_email_notification
-from auth.dependencis import CurrentUser, UserPdb
+from auth.dependencis import CurrentUser, UserPdb, AdminUser
 from auth.schemas import ExtendedUserScheme, RefreshToken, UserLoginData, UserRegisterScheme, UserScheme, TokenScheme
 from auth.utils import create_access_token, create_refresh_token, get_refreshed_access_token, create_confirm_token
 
@@ -73,7 +73,6 @@ async def verify_email_address(token: str, cache: CacheMngr, db: UserPdb):
     return {"detail": "email verified"}
 
 
-
-
-
-
+@auth_router.get('/admin')
+async def check_admin_rights(user: AdminUser):
+    return {'detail': 'success'}

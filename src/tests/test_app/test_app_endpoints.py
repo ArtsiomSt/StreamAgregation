@@ -1,8 +1,7 @@
 import pytest
-from fastapi.testclient import TestClient
 from httpx import AsyncClient
 
-from db.postgre_managers import AuthRelationalManager, TwitchRelationalManager
+from db.postgre_managers import TwitchRelationalManager
 
 
 @pytest.mark.asyncio

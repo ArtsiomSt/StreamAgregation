@@ -6,8 +6,8 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import ValidationError
 
-from auth.exceptions import AuthException
-from auth.schemas import ExtendedUserScheme, TokenPayload
+from auth.exceptions import AuthException, AccessForbidden
+from auth.schemas import ExtendedUserScheme, TokenPayload, AdminUserScheme
 
 from .utils import ALGORITHM, JWT_SECRET_KEY
 
@@ -32,13 +32,21 @@ async def get_current_user(db: UserPdb, token: str = Depends(reusable_oauth)) ->
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[ALGORITHM])
         token_payload = TokenPayload(subject=payload.get("sub"), expire=payload.get("exp"))
     except jwt.ExpiredSignatureError:
-        print('exp')
         raise AuthException("Token expired")
     except (jwt.JWTError, ValidationError):
-        print('valid')
         raise AuthException("Could not validate credentials")
     current_user = await db.get_one_user_by_email(token_payload.subject)
     return current_user
 
 
 CurrentUser = Annotated[ExtendedUserScheme, Depends(get_current_user)]
+
+
+async def get_current_admin_user(db: UserPdb, current_user: CurrentUser) -> AdminUserScheme:
+    admin_user = await db.check_admin_user(current_user)
+    if not admin_user:
+        raise AccessForbidden()
+    return admin_user
+
+
+AdminUser = Annotated[AdminUserScheme, Depends(get_current_admin_user)]

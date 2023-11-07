@@ -8,7 +8,7 @@ from pytest_mock import MockFixture
 
 from auth.schemas import ExtendedUserScheme
 from db.postgre_managers import AuthRelationalManager
-from tests.conftest import client
+
 
 with open("tests/test_auth/requests_auth.json", "r") as json_requests_file:
     json_requests = json.loads(json_requests_file.read())

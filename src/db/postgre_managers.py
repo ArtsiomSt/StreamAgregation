@@ -3,8 +3,8 @@ from collections import Counter
 from typing import Any, Optional, Union
 
 from auth.exceptions import AuthException
-from auth.models import User
-from auth.schemas import ExtendedUserScheme, UserRegisterScheme, UserScheme
+from auth.models import User, AdminUsers
+from auth.schemas import ExtendedUserScheme, UserRegisterScheme, UserScheme, AdminUserScheme
 from auth.utils import get_hashed_password, verify_password
 from fastapi import HTTPException
 from sqlalchemy import and_, insert, or_, select, func, delete, update, not_
@@ -109,6 +109,22 @@ class AuthRelationalManager(RelationalManager):
         )
         await self.db.commit()
         return True
+
+    async def check_admin_user(self, user: ExtendedUserScheme) -> Optional[AdminUserScheme]:
+        result = await self.db.execute(
+            select(AdminUsers)
+            .join(User, User.id == AdminUsers.user_id)
+            .options(joinedload(AdminUsers.user))
+            .where(AdminUsers.user_id == user.id)
+        )
+        try:
+            admin_user = result.scalars().one()
+        except NoResultFound:
+            return None
+        return AdminUserScheme(
+            is_superuser=admin_user.is_superuser,
+            **admin_user.user.__dict__
+        )
 
 
 class TwitchRelationalManager(RelationalManager):
@@ -219,7 +235,7 @@ class TwitchRelationalManager(RelationalManager):
             )
         )
         try:
-            current_subscription = result.scalars().one()
+            result.scalars().one()
         except NoResultFound:
             raise HTTPException(status_code=400, detail="You are not subscribed to this streamer")
         await self.db.execute(
@@ -372,7 +388,9 @@ class TwitchRelationalManager(RelationalManager):
             for streamer in result.scalars().all()
         ]
 
-    async def get_users_favourite_games(self, user: ExtendedUserScheme, target_games_amount: int = 3):
+    async def get_users_favourite_games(self,
+                                        user: ExtendedUserScheme,
+                                        target_games_amount: int = 3) -> list[TwitchGameScheme]:
         users_subscriptions = (
             select(UserSubscription.twitch_user_id.label('twitch_user_id'))
             .where(UserSubscription.user_id == user.id)
@@ -445,7 +463,9 @@ class TwitchRelationalManager(RelationalManager):
         else:
             return [(res[1], res[2]) for res in result.all() if res[2]]
 
-    async def get_users_recommendations(self, user: ExtendedUserScheme, recommendations_amount: int = 10):
+    async def get_users_recommendations(self,
+                                        user: ExtendedUserScheme,
+                                        recommendations_amount: int = 10) -> list[TwitchUserScheme]:
         users_games = await self.get_users_favourite_games(user)
         streamers_with_that_game = await self.get_streamers_game(target_games=users_games)
         streamers_id_with_that_game = [res[0] for res in streamers_with_that_game]

@@ -17,7 +17,7 @@ class Settings(BaseSettings):
                 "env": "EMAIL_HOST_USER",
             },
             "email_host_password": {
-                "env":  "EMAIL_HOST_PASSWORD",
+                "env": "EMAIL_HOST_PASSWORD",
             },
             "mongo_url": {
                 "env": "DATABASE_URL",

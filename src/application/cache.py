@@ -98,7 +98,7 @@ def get_paginated_dict(
         if key in paginate_fields and type(value) == list:
             if len(value) < paginate_by:
                 raise PaginationException(detail=f"Maximum paginate_by value is {len(value)}")
-            data[key] = value[paginate_by * page_num : paginate_by * (page_num + 1)]
+            data[key] = value[paginate_by * page_num: paginate_by * (page_num + 1)]
         elif key in paginate_fields and type(value) == dict:
             get_paginated_dict(value, paginate_fields, paginate_by, page_num)
     return data

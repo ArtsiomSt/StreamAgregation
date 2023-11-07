@@ -4,7 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 from twitch.routers import twitch_router
 
-from .config import Settings
 from .tasks import divide
 
 app = FastAPI()

@@ -55,7 +55,7 @@ def get_refreshed_access_token(refresh_token: str) -> str:
         token_payload = TokenPayload(subject=payload.get("sub"), expire=payload.get("exp"))
     except jwt.ExpiredSignatureError:
         raise AuthException("Token expired")
-    except (jwt.JWTError, ValidationError) as e:
+    except (jwt.JWTError, ValidationError):
         raise AuthException("Could not validate credentials")
     return create_access_token(token_payload.subject)
 

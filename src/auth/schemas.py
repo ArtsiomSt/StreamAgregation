@@ -26,6 +26,10 @@ class ExtendedUserScheme(UserScheme):
     hashed_password: str
 
 
+class AdminUserScheme(ExtendedUserScheme):
+    is_superuser: bool
+
+
 class UserLoginData(BaseModel):
     email: str
     password: str
