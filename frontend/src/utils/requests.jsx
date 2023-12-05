@@ -1,14 +1,21 @@
-export async function bodyRequest(url, body, headers = {}, method = 'POST') {
-    const additional_headers = {
-        'Content-Type': 'application/json',
+export async function bodyRequest(url, body, headers = {}, method = 'POST', autoContentType=false, file=false) {
+    let additional_headers;
+    if (!autoContentType) {
+        additional_headers = {
+            'Content-Type': 'application/json',
+        }
+    } else {
+        additional_headers = {}
     }
+    console.log('start');
     for (const [key, value] of Object.entries(headers)) {
         additional_headers[key] = value;
     }
+    console.log(additional_headers);
     return await fetch(url, {
         method: method,
         headers: additional_headers,
-        body: JSON.stringify(body)
+        body: !file ? JSON.stringify(body) : body
     })
 }
 
@@ -101,17 +108,21 @@ export async function deleteRequestWithAuth(url) {
 }
 
 
-export async function bodyRequestWithAuth(url, body, method = "POST") {
+export async function bodyRequestWithAuth(url, body, method = "POST", autoContentType=false, file=false) {
     const access_token = localStorage.getItem('access_token');
     const refresh_token = localStorage.getItem('refresh_token');
     if (access_token === null || refresh_token === null) {
         document.cookie = "email=" + "" + "; SameSite=strict" + "; max-age=" + 0;
         throw 'noAuth'
     }
-    const response = await bodyRequest(url, body, {'Authorization': 'Bearer ' + access_token}, method);
+    const response = await bodyRequest(url, body, {
+        'Authorization': 'Bearer ' + access_token,
+    }, method, autoContentType, file);
     if (response.status === 401) {
         const new_access_token = await refreshToken(refresh_token)
-        const second_response = await bodyRequest(url, body, {'Authorization': 'Bearer ' + new_access_token}, method);
+        const second_response = await bodyRequest(url, body, {
+            'Authorization': 'Bearer ' + new_access_token,
+        }, method, autoContentType, file);
         if (second_response.status !== 401) {
             return second_response
         } else {

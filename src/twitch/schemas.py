@@ -1,3 +1,4 @@
+import os
 from typing import Any, Optional
 
 from pydantic import Field, field_validator, BaseModel
@@ -79,3 +80,14 @@ class TwitchStreamerParams(PaginateFields):
 
 class SearchScheme(TwitchStreamerParams):
     search_value: str
+
+
+class NotificationStatistics(BaseModel):
+    email_host_user: str = Field(default=os.getenv("EMAIL_HOST_USER", "ERROR"))
+    started_subscribed_streams: int
+    notifications_amount: int
+
+
+class StreamStatistics(BaseModel):
+    streams_amount: int
+    most_popular_games: list[TwitchGame]

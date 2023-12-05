@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if [ "$1" = "print" ]; then
+    echo "Hello, World!"
+fi
+
+if [ "$1" = "push" ]; then
+    docker push artsiomst/fastapi-main
+    docker push artsiomst/fastapi-parser
+    docker push artsiomst/fastapi-schedule
+    docker push artsiomst/kafka-broker
+    docker push artsiomst/celery-worker
+    docker push artsiomst/celery-beat
+    docker push artsiomst/celery-flower
+fi
+
+if [ "$1" = "build" ]; then
+    docker-compose build
+fi
+

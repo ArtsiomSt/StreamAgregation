@@ -36,6 +36,7 @@ httpx = "*"
 pytest-asyncio = "*"
 pytest-mock = "*"
 flower = "*"
+python-multipart = "*"
 
 [dev-packages]
 

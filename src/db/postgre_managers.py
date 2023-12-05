@@ -1,5 +1,8 @@
 import random
+import json
+from datetime import datetime, date
 from collections import Counter
+from tempfile import SpooledTemporaryFile
 from typing import Any, Optional, Union
 
 from auth.exceptions import AuthException
@@ -40,6 +43,18 @@ class RelationalManager:
 
     async def close_database_connection(self) -> None:
         await self.db.close()
+
+    @staticmethod
+    def today() -> tuple[date, datetime, datetime]:
+        """
+        returns:
+            today: date, StartOfTodayDay: datetime, EndOfTodayDat: datetime
+        """
+
+        today = date.today()
+        start_of_day = datetime.combine(today, datetime.min.time())
+        end_of_day = datetime.combine(today, datetime.max.time())
+        return today, start_of_day, end_of_day
 
 
 class AuthRelationalManager(RelationalManager):
@@ -125,6 +140,54 @@ class AuthRelationalManager(RelationalManager):
             is_superuser=admin_user.is_superuser,
             **admin_user.user.__dict__
         )
+
+    async def get_all_users(self) -> list[ExtendedUserScheme]:
+        result = await self.db.execute(
+            select(User)
+        )
+        return [
+            ExtendedUserScheme(**user.__dict__)
+            for user in result.scalars().all()
+        ]
+
+    async def get_admins_ids(self) -> list[int]:
+        result = await self.db.execute(
+            select(AdminUsers.user_id)
+        )
+        return [int(el[0]) for el in result.all()]
+
+    async def get_users_dump(self):
+        users = await self.get_all_users()
+        json_dump = {
+            "users": [user.model_dump() for user in users],
+            "admins_ids": await self.get_admins_ids()
+        }
+        return json_dump
+
+    async def load_user_dump(self, file: SpooledTemporaryFile):
+        try:
+            users_dump_from_file: dict = json.loads(file.read())
+        except json.JSONDecodeError:
+            return
+        print(users_dump_from_file)
+        admins_ids = users_dump_from_file.get('admins_ids', [])
+        for user in users_dump_from_file.get('users', []):
+            try:
+                existing_user = await self.get_one_user_by_email(user['email'])
+            except AuthException:
+                user_to_save = User(
+                    username=user['username'],
+                    email=user['email'],
+                    first_name=user.get('first_name', ''),
+                    last_name=user.get('last_name', ''),
+                    is_email_verified=user.get('is_email_verified', False),
+                    hashed_password=user['hashed_password']
+                )
+                self.db.add(user_to_save)
+                if user['id'] in admins_ids:
+                    user_admin = AdminUsers(user_id=user['id'])
+                    self.db.add(user_admin)
+        await self.db.commit()
 
 
 class TwitchRelationalManager(RelationalManager):
@@ -514,3 +577,70 @@ class TwitchRelationalManager(RelationalManager):
             TwitchUserScheme(**streamer.__dict__)
             for streamer in result.scalars().all()
         ]
+
+    async def get_today_subscribed_streams_amount(self) -> int:
+        today, start_of_day, end_of_day = self.today()
+        result = await self.db.execute(
+            select(func.count())
+            .select_from(Notification)
+            .where(
+                and_(
+                    Notification.created_at >= start_of_day,
+                    Notification.created_at <= end_of_day
+                ))
+        )
+        return result.scalars().one()
+
+    async def get_today_notifications_amount(self) -> int:
+        today, start_of_day, end_of_day = self.today()
+        result = await self.db.execute(
+            select(func.sum(Notification.notification_count))
+            .select_from(Notification)
+            .where(
+                and_(
+                    Notification.created_at >= start_of_day,
+                    Notification.created_at <= end_of_day
+                ))
+        )
+        notifications_amount = result.scalars().one()
+        return notifications_amount if notifications_amount else 0
+    async def get_today_streams_amount(self) -> int:
+        today, start_of_day, end_of_day = self.today()
+        result = await self.db.execute(
+            select(func.count())
+            .select_from(TwitchStream)
+            .where(
+                and_(
+                    TwitchStream.created_at >= start_of_day,
+                    TwitchStream.created_at <= end_of_day
+                )
+            )
+        )
+        return result.scalars().one()
+
+    async def get_today_most_popular_game(self) -> list[TwitchGameScheme]:
+        today, start_of_day, end_of_day = self.today()
+        most_popular_daily_game = (
+            select(func.count().label('game_count'), TwitchStream.game_id)
+            .select_from(TwitchStream)
+            .where(
+                and_(
+                    TwitchStream.created_at >= start_of_day,
+                    TwitchStream.created_at <= end_of_day,
+                    TwitchStream.game_id.is_not(None)
+                )
+            )
+            .group_by(TwitchStream.game_id)
+        ).subquery()
+        result = await self.db.execute(
+            select(most_popular_daily_game)
+            .where(
+                most_popular_daily_game.c.game_count == (select(func.max(most_popular_daily_game.c.game_count))
+                                                         .select_from(most_popular_daily_game).scalar_subquery()
+                                                         ))
+        )
+        target_games_ids = [el[1] for el in result.all()]
+        most_popular_games = await self.db.execute(
+            select(TwitchGame).where(TwitchGame.id.in_(target_games_ids))
+        )
+        return [TwitchGameScheme(**game.__dict__) for game in most_popular_games.scalars().all()]

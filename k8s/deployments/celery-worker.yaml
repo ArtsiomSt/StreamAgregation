@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: celery-worker
+spec:
+  selector:
+    app: celery-worker
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+  type: LoadBalancer
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-worker
+  labels:
+    app: celery-worker
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: celery-worker
+  template:
+    metadata:
+      name: celery-worker
+      labels:
+        app: celery-worker
+    spec:
+      containers:
+        - name: celery-worker
+          image: artsiomst/celery-worker
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_URL
+              value: "mongodb://db:27017/"
+            - name: LAMODA_DB_NAME
+              value: "lamoda_db"
+            - name: LAMODA_URL
+              value: "https://www.lamoda.by"
+            - name: TWITCH_DB_NAME
+              value: "twitch_db"
+            - name: REDIS_HOST
+              value: "redis"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: KAFKA_BROKER
+              value: "kafka:29092"
+            - name: CELERY_BROKER_URL
+              value: "redis://redis:6379/0"
+            - name: CELERY_RESULT_BACKEND
+              value: "redis://redis:6379/0"
+            - name: JWT_SECRET_KEY
+              value: "dakljfklEIOHFWUIHFui2hfq87hfiuhckjbajksbdkjchEUGOUIWHFDsadas"
+            - name: JWT_REFRESH_SECRET_KEY
+              value: "dhaCBHFCYRGFMDBC,DKFLKDAkjkhJHJKHNJKJHHJhjhjhjB;EL'fE"
+            - name: EMAIL_HOST_PASSWORD
+              value: "kikpnvjcxiedcawi"
+            - name: EMAIL_HOST_USER
+              value: "akeonst@yandex.ru"
+            - name: HOST
+              value: "http://fastapi_parser:8001"
+            - name: PRODUCT_URL
+              value: "/lamoda/product/parse"
+            - name: CATEGORY_URL
+              value: "/lamoda/category/parse"
+            - name: STREAMS_URL
+              value: "/twitch/stream/parse"
+            - name: KAFKA_BROKER_URL
+              value: "kafka:29092"
+            - name: LAMODA_PRODUCT_TOPIC
+              value: "product"
+            - name: LAMODA_CATEGORY_TOPIC
+              value: "category"
+            - name: TWITCH_STREAM_TOPIC
+              value: "stream"
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              value: "postgrespostgres"
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_HOST
+              value: "pgdb"
+            - name: POSTGRES_DB
+              value: "streamaggr"
+            - name: TOKEN_URL
+              value: "https://id.twitch.tv/oauth2/token"
+            - name: CLIENT_ID
+              value: "8r9pfuda1hkeko175k0syl4lbfdvou"
+            - name: CLIENT_SECRET
+              value: "cw6l0odpmwkb2uvpcvqyluwqvfcf5q"
+            - name: GRAND_TYPE
+              value: "client_credentials"
+            - name: GET_STREAMS
+              value: "https://api.twitch.tv/helix/streams"
+            - name: GET_USERS
+              value: "https://api.twitch.tv/helix/users"
+            - name: GET_GAMES
+              value: "https://api.twitch.tv/helix/games"

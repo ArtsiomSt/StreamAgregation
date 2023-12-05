@@ -3,6 +3,7 @@ import NavBar from "./navbar";
 import {getRequestWithAuth, bodyRequestWithAuth} from "../utils/requests";
 import {useNavigate} from "react-router-dom";
 import GamesComponent from "./games";
+import '../styles/core.css'
 
 
 const ChartsComponent = () => {
@@ -96,21 +97,23 @@ const ChartsComponent = () => {
                 <h3>Your top games</h3>
                 <GamesComponent games={games}/>
             </div>
-            <h3>Your recommendations</h3>
-            {recommendations.length === 0 && (
-                <h2><p>It seems like you don't have new recommendations</p><p>Wait for next partition</p></h2>)}
-            {recommendations.length !== 0 && (<ol className="list-group list-group-numbered">
-                {recommendations.map((item) => (
-                    <li className="list-group-item d-flex justify-content-between align-items-start">
-                        <div className="ms-2 me-auto">
-                            <div className="fw-bold">{item.display_name}</div>
-                            login - {item.login}
-                        </div>
-                        <a href="#" onClick={() => handleSubscription(item.twitch_user_id, 'subscribe')}><span
-                            className="badge bg-primary rounded-pill">{item.action}</span></a>
-                    </li>
-                ))}
-            </ol>)}
+            <div className='center-border'>
+                <h3>Your recommendations</h3>
+                {recommendations.length === 0 && (
+                    <h2><p>It seems like you don't have new recommendations</p><p>Wait for next partition</p></h2>)}
+                {recommendations.length !== 0 && (<ol className="list-group list-group-numbered">
+                    {recommendations.map((item) => (
+                        <li className="list-group-item d-flex justify-content-between align-items-start">
+                            <div className="ms-2 me-auto">
+                                <div className="fw-bold">{item.display_name}</div>
+                                login - {item.login}
+                            </div>
+                            <a href="#" onClick={() => handleSubscription(item.twitch_user_id, 'subscribe')}><span
+                                className="badge bg-primary rounded-pill">{item.action}</span></a>
+                        </li>
+                    ))}
+                </ol>)}
+            </div>
         </div>
     )
 }

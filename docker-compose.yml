@@ -2,6 +2,7 @@ version: "3.9"
 
 services:
   fastapi:
+    image: artsiomst/fastapi-main
     build: src
     command: bash -c "python -m uvicorn application.app:app --reload --host 0.0.0.0 --port 8000"
     ports:
@@ -19,6 +20,7 @@ services:
     networks:
       - botnet
   fastapi_parser:
+    image: artsiomst/fastapi-parser
     build: src
     command: bash -c "python -m uvicorn application.app:app --reload --host 0.0.0.0 --port 8001"
     ports:
@@ -35,6 +37,7 @@ services:
     networks:
       - botnet
   schedule:
+    image: artsiomst/fastapi-schedule
     build: scheduler
     command: bash -c "python schedule_tasks.py"
     volumes:
@@ -59,13 +62,19 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     networks:
       - botnet
+    healthcheck:
+      test: [ "CMD", "nc", "-zv", "localhost", "2181" ]
+      interval: 20s
+      timeout: 10s
+      retries: 3
   kafka:
     image: confluentinc/cp-kafka:latest
     container_name: kafka
     ports:
       - "9092:9092"
     depends_on:
-      - zookeeper
+      zookeeper:
+          condition: service_healthy
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
@@ -76,8 +85,14 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
     networks:
       - botnet
+    healthcheck:
+      test: ["CMD", "nc", "-zv", "localhost", "9092"]
+      interval: 20s
+      timeout: 10s
+      retries: 3
   broker:
     build: broker
+    image: artsiomst/kafka-broker
     command: bash -c "python broker.py"
     env_file:
       - env/backends.env
@@ -85,7 +100,8 @@ services:
     volumes:
       - ./broker:/app
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     networks:
       - botnet
   redis:
@@ -119,6 +135,7 @@ services:
       - botnet
   celery-worker:
     build: src
+    image: artsiomst/celery-worker
     command: celery -A application.celery_conf.celery worker -l info
     volumes:
       - ./src:/app
@@ -133,6 +150,7 @@ services:
       - botnet
   celery-beat:
     build: src
+    image: artsiomst/celery-beat
     command: celery -A application.celery_conf.celery beat -l info
     volumes:
       - ./src:/app
@@ -148,6 +166,7 @@ services:
       - botnet
   celery-flower:
     build: src
+    image: artsiomst/celery-flower
     command: celery -A application.celery_conf.celery flower --port=5556
     volumes:
       - ./src:/app

@@ -2,7 +2,8 @@ import {useNavigate} from "react-router-dom";
 import React, {useEffect, useState} from "react";
 import {bodyRequestWithAuth, bodyRequest, deleteRequestWithAuth, getRequestWithAuth} from "../utils/requests";
 import Popup from "../utils/popup";
-import NavBar from "./navbar"
+import NavBar from "./navbar";
+import '../styles/table.css';
 
 
 const StreamersComponent = () => {
@@ -31,7 +32,7 @@ const StreamersComponent = () => {
                 body['search_streamer'] = search;
             }
             let url = '/twitch/streamers'
-            if (searchByGame){
+            if (searchByGame) {
                 body['search_value'] = searchByGame;
                 url = '/twitch/games/streamers';
             }
@@ -144,46 +145,52 @@ const StreamersComponent = () => {
             </div>
             <br/>
             <h4>Streamers</h4>
-            <hr/>
             {showPopup && (
                 <div>
                     <Popup content={popupContent} setActive={setShowPopup}/>
                 </div>
             )}
-            {data.map((item) => (
-                <div>
-                    <ol className="list-group list-groupd">
-                        <li className="d-flex justify-content-between align-items-start">
-                            <div className="ms-2 me-auto">
-                                <div className="fw-bold">{item.id}</div>
-                                <div className="fw-bold">Display name: {item.display_name}, login : {item.login}</div>
-                                {item.description}
-                                <hr/>
-                            </div>
-                            <a onClick={() => handleSubscription(item.twitch_user_id, item.action)} href="#"><span
-                                className="badge bg-primary rounded-pill">{item.action}</span></a>
-                        </li>
-                    </ol>
-                </div>
-            ))}
-            <nav aria-label="Page navigation example">
-                <ul className="pagination">
-                    {currentPage > 1 && (
-                        <li className="page-item">
-                            <a onClick={() => handlePageClick(currentPage - 1)} className="page-link"
-                               href="#">Previous</a>
-                        </li>
-                    )}
-                    <li className="page-item active" aria-current="page"><a className="page-link"
-                                                                            href="#">{currentPage}</a></li>
-                    {data.length === 20 && (
-                        <li className="page-item">
-                            <a onClick={() => handlePageClick(currentPage + 1)} className="page-link"
-                               href="#">Next</a>
-                        </li>
-                    )}
-                </ul>
-            </nav>
+            <div className='table-container'>
+                <table>
+                    <tr>
+                        <th>id</th>
+                        <th>Login</th>
+                        <th>Display Name</th>
+                        <th>Description</th>
+                        <th>Subscribe</th>
+                    </tr>
+                    {data.map((item) => (
+                        <tr>
+                            <td>{item.id}</td>
+                            <td>{item.login}</td>
+                            <td>{item.display_name}</td>
+                            <td>{item.description}</td>
+                            <td><a onClick={() => handleSubscription(item.twitch_user_id, item.action)} href="#"><span
+                                className="badge bg-primary rounded-pill">{item.action}</span></a></td>
+                        </tr>
+                    ))}
+                </table>
+            </div>
+            <div>
+                <nav aria-label="Page navigation example">
+                    <ul className="pagination">
+                        {currentPage > 1 && (
+                            <li className="page-item">
+                                <a onClick={() => handlePageClick(currentPage - 1)} className="page-link"
+                                   href="#">Previous</a>
+                            </li>
+                        )}
+                        <li className="page-item active" aria-current="page"><a className="page-link"
+                                                                                href="#">{currentPage}</a></li>
+                        {data.length === 20 && (
+                            <li className="page-item">
+                                <a onClick={() => handlePageClick(currentPage + 1)} className="page-link"
+                                   href="#">Next</a>
+                            </li>
+                        )}
+                    </ul>
+                </nav>
+            </div>
         </div>
     );
 }

@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from application.cache import RedisCacheManager
 from application.dependecies import get_cache_manager
-from auth.dependencis import CurrentUser
+from auth.dependencis import CurrentUser, AdminUser
 from brokers.producer import producer
 from core.enums import ObjectStatus
 from db.postgre_managers import TwitchRelationalManager
@@ -15,7 +15,16 @@ from pydantic import ValidationError
 
 from .config import TwitchSettings
 from .dependencies import get_twitch_parser, get_twitch_pdb
-from .schemas import TaskStatus, TwitchStreamParams, TwitchGame, TwitchUser, TwitchStreamerParams, SearchScheme
+from .schemas import (
+    TaskStatus,
+    TwitchStreamParams,
+    TwitchGame,
+    TwitchUser,
+    TwitchStreamerParams,
+    SearchScheme,
+    NotificationStatistics,
+    StreamStatistics
+)
 from .service import TwitchParser
 from .tasks import get_live_subscribed_streams
 
@@ -174,3 +183,19 @@ async def find_streamers_by_game(db: TwitchPdb, search: SearchScheme) -> list[Tw
         target_streamers = await db.get_streamers(search=search.search_streamer, no_pagination=True)
     target_games = await db.get_games(100, 0, search.search_value)
     return await db.get_streamers_by_game(target_games, target_streamers, search.paginate_by, search.page_num)
+
+
+@twitch_router.get('/reports/notification')
+async def get_notifications_report(db: TwitchPdb) -> NotificationStatistics:
+    return NotificationStatistics(
+        started_subscribed_streams=await db.get_today_subscribed_streams_amount(),
+        notifications_amount=await db.get_today_notifications_amount()
+    )
+
+
+@twitch_router.get('/reports/stream')
+async def get_stream_report(db: TwitchPdb) -> StreamStatistics:
+    return StreamStatistics(
+        streams_amount=await db.get_today_streams_amount(),
+        most_popular_games=await db.get_today_most_popular_game()
+    )

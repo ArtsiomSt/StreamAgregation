@@ -36,7 +36,7 @@ async def trigger_parser_with_english_streams():
 async def trigger_parser_with_russian_streams():
     print("Triggering parsing for parsing russian streams")
     body = {
-        "streams_amount": 2,
+        "streams_amount": 100,
         "language": "ru"
     }
     await send_post_request("http://fastapi_parser:8001/twitch/stream/", body)
@@ -45,6 +45,7 @@ async def trigger_parser_with_russian_streams():
 schedule.every(10).seconds.do(trigger_notifications)
 schedule.every(20).minutes.do(trigger_parser_with_english_streams)
 schedule.every(20).minutes.do(trigger_parser_with_russian_streams)
+
 
 async def main():
     while True:

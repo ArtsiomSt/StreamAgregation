@@ -1,6 +1,8 @@
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Depends, Request, status
+from fastapi import APIRouter, HTTPException, Depends, Request, status, UploadFile, File
+from fastapi.responses import FileResponse
+from fastapi.requests import Request
 
 from application.cache import RedisCacheManager
 from application.dependecies import get_cache_manager
@@ -8,6 +10,7 @@ from application.utils import send_email_notification
 from auth.dependencis import CurrentUser, UserPdb, AdminUser
 from auth.schemas import ExtendedUserScheme, RefreshToken, UserLoginData, UserRegisterScheme, UserScheme, TokenScheme
 from auth.utils import create_access_token, create_refresh_token, get_refreshed_access_token, create_confirm_token
+from core.utils import create_temp_json_file
 
 auth_router = APIRouter(prefix="/auth")
 
@@ -71,6 +74,17 @@ async def verify_email_address(token: str, cache: CacheMngr, db: UserPdb):
         raise HTTPException(status_code=400, detail='Not valid link')
     await db.confirm_user_email(email)
     return {"detail": "email verified"}
+
+
+@auth_router.get('/dump')
+async def get_users_json_dump(db: UserPdb, user: AdminUser):
+    file = create_temp_json_file(await db.get_users_dump())
+    return FileResponse(file.name, filename='userdump.json')
+
+
+@auth_router.post('/dump')
+async def upload_json_dump(db: UserPdb, file: UploadFile = File(...)):
+    await db.load_user_dump(file.file)
 
 
 @auth_router.get('/admin')

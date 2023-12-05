@@ -3,6 +3,7 @@ import {useNavigate} from "react-router-dom";
 import React, {useState, useEffect} from "react";
 import NavBar from "./navbar"
 import {getCookie} from "../utils/utils";
+import '../styles/core.css'
 
 
 const ProfileComponent = () => {
@@ -70,8 +71,7 @@ const ProfileComponent = () => {
                 document.cookie = "cooldown=" + 1 + "; SameSite=strict" + "; max-age=" + 60;
                 const response = await getRequestWithAuth('/auth/email/send-verify-email');
                 setVerificationDetail("");
-            }
-            else {
+            } else {
                 setVerificationDetail("You have to wait 1 minute till next verify request");
             }
         } catch (error) {
@@ -111,7 +111,7 @@ const ProfileComponent = () => {
                         </tbody>
                     </table>
                 </div>
-                <div>
+                <div className='center-border'>
                     <form onSubmit={handleChangeProfileInfo}>
                         <div>
                             <label>Username: </label>
@@ -144,21 +144,21 @@ const ProfileComponent = () => {
                         <button type="submit">Submit</button>
                         <h3>{detail}</h3>
                     </form>
+                    {isEmailVerified === false && (
+                        <div className='center'>
+                            <h6>Your email is not verified &nbsp;
+                                <button onClick={handleEmailVerify}>Verify</button>
+                            </h6>
+                            <h6>{verificationDetail}</h6>
+                        </div>
+                    )}
+                    {isEmailVerified === true && (
+                        <div className='center'>
+                            <h6>Your email is verified
+                            </h6>
+                        </div>
+                    )}
                 </div>
-                {isEmailVerified === false && (
-                    <div>
-                        <h6>Your email is not verified &nbsp;
-                            <button onClick={handleEmailVerify}>Verify</button>
-                        </h6>
-                        <h6>{verificationDetail}</h6>
-                    </div>
-                )}
-                {isEmailVerified === true && (
-                    <div>
-                        <h6>Your email is verified
-                        </h6>
-                    </div>
-                )}
             </div>
         </div>
     )
