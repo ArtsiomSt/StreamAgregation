@@ -7,7 +7,7 @@ settings = Settings()
 
 email_config = ConnectionConfig(
     MAIL_USERNAME=settings.email_host_user,
-    MAIL_PASSWORD="ehebvpurfligbhnb",
+    MAIL_PASSWORD=settings.email_host_password,
     MAIL_FROM=settings.email_host_user,
     MAIL_PORT=465,
     MAIL_SERVER="smtp.yandex.ru",
