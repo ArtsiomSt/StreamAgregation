@@ -7,11 +7,9 @@ export async function bodyRequest(url, body, headers = {}, method = 'POST', auto
     } else {
         additional_headers = {}
     }
-    console.log('start');
     for (const [key, value] of Object.entries(headers)) {
         additional_headers[key] = value;
     }
-    console.log(additional_headers);
     return await fetch(url, {
         method: method,
         headers: additional_headers,

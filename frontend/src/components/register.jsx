@@ -33,17 +33,23 @@ const RegisterForm = () => {
             if (response.status === 200) {
                 setDetail("Register Success");
                 navigate("/login")
-            } else {
+            }
+            else if (response.status === 400){
                 const data = await response.json();
-                console.log(data.detail)
+                alert(data.detail)
+            }
+            else {
+                const data = await response.json();
+                alert(data.detail[0].msg)
             }
         } catch (error) {
             console.error('An error occurred', error);
+            alert("Invalid credentials ");
         }
     };
     return (
         <div>
-            <NavBar />
+            <NavBar/>
             <form onSubmit={handleRegister}>
                 <div>
                     <label>Email: </label>

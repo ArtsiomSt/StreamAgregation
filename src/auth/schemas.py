@@ -12,6 +12,16 @@ class UserRegisterScheme(BaseModel):
     last_name: Optional[str] = ""
     password: str
 
+    @field_validator("password", mode='before')
+    @classmethod
+    def validate_password(cls, value):
+        password = value
+        min_length = 8
+        if len(password) < min_length:
+            raise ValueError('Password must be at least 8 characters long.')
+        if not any(character.islower() for character in password):
+            raise ValueError('Password should contain at least one lowercase character.')
+        return value
 
 class UserScheme(BaseModel):
     id: Optional[int] = None

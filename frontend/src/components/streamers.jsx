@@ -1,6 +1,7 @@
 import {useNavigate} from "react-router-dom";
 import React, {useEffect, useState} from "react";
 import {bodyRequestWithAuth, bodyRequest, deleteRequestWithAuth, getRequestWithAuth} from "../utils/requests";
+import GamesComponent from "./games";
 import Popup from "../utils/popup";
 import NavBar from "./navbar";
 import '../styles/table.css';
@@ -14,6 +15,7 @@ const StreamersComponent = () => {
     const [showPopup, setShowPopup] = useState(false);
     const [popupContent, setPopupContent] = useState("");
     const [searchGame, setSearchGame] = useState("");
+    const [games, setGames] = useState([]);
 
     const navigate = useNavigate();
 
@@ -37,6 +39,15 @@ const StreamersComponent = () => {
                 url = '/twitch/games/streamers';
             }
             const response = await bodyRequest(url, body);
+            if (searchByGame){
+                url = '/twitch/games/query';
+                const gamesResponse = await bodyRequest(url, body);
+                const gamesData = await gamesResponse.json();
+                setGames(gamesData);
+            }
+            else {
+                setGames([])
+            }
             setData(await response.json());
         } catch (error) {
             console.log(error);
@@ -48,6 +59,7 @@ const StreamersComponent = () => {
         setCurrentPage(1);
         await getStreamers(1, search, searchGame);
     }
+
     const handlePageClick = async (pageNumber) => {
         setCurrentPage(pageNumber);
         await getStreamers(pageNumber, search, searchGame);
@@ -144,7 +156,13 @@ const StreamersComponent = () => {
                 </form>
             </div>
             <br/>
-            <h4>Streamers</h4>
+            {games.length !== 0 && (
+                <div>
+                    <h3>Games matching your request</h3>
+                    <GamesComponent games={games}/>
+                </div>
+            )}
+            <h3>Streamers</h3>
             {showPopup && (
                 <div>
                     <Popup content={popupContent} setActive={setShowPopup}/>

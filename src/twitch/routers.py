@@ -177,12 +177,23 @@ async def get_my_top_games(db: TwitchPdb, user: CurrentUser) -> list[TwitchGame]
 
 
 @twitch_router.post('/games/streamers')
-async def find_streamers_by_game(db: TwitchPdb, search: SearchScheme) -> list[TwitchUser]:
+async def find_streamers_by_game(db: TwitchPdb, search: SearchScheme, cache: CacheMngr) -> list[TwitchUser]:
     target_streamers = None
     if search.search_streamer:
         target_streamers = await db.get_streamers(search=search.search_streamer, no_pagination=True)
     target_games = await db.get_games(100, 0, search.search_value)
+    if target_streamers:
+        await cache.save_to_cache({'search-game': search.search_value}, 300, target_games[:5], many=True)
     return await db.get_streamers_by_game(target_games, target_streamers, search.paginate_by, search.page_num)
+
+
+@twitch_router.post('/games/query')
+async def find_games_by_query(db: TwitchPdb, search: SearchScheme, cache: CacheMngr) -> list[TwitchGame]:
+    target_games = await cache.get_object_from_cache({'search-game': search.search_value})
+    if not target_games:
+        target_games = await db.get_games(100, 0, search.search_value)
+        await cache.save_to_cache({'search-game': search.search_value}, 300, target_games[:5], many=True)
+    return target_games
 
 
 @twitch_router.get('/reports/notification')

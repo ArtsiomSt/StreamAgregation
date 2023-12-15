@@ -5,6 +5,7 @@ import GamesComponent from "./games";
 import '../styles/core.css';
 import '../styles/pie-chart.css';
 import '../styles/styles.css';
+import {useNavigate} from "react-router-dom";
 
 
 const AdminComponent = () => {
@@ -17,6 +18,8 @@ const AdminComponent = () => {
     const [notificationsAmount, setNotificationsAmount] = useState(0);
     const [dump, setDump] = useState('');
     const [restoreStatus, setRestoreStatus] = useState(false);
+
+    const navigate = useNavigate();
 
     const processFileDownload = async () => {
         const response = await getRequestWithAuth('/auth/dump');
@@ -31,37 +34,51 @@ const AdminComponent = () => {
         document.body.removeChild(link);
     }
     const checkAdminRights = async () => {
-        const response = await getRequestWithAuth('/auth/admin');
-        if (response.status === 403) {
-            setDetail('Forbidden');
-            setIsAdmin(false);
-        }
-        if (response.status === 200) {
-            setIsAdmin(true);
+        try {
+            const response = await getRequestWithAuth('/auth/admin');
+            if (response.status === 403) {
+                setDetail('Forbidden');
+                setIsAdmin(false);
+            }
+            if (response.status === 200) {
+                setIsAdmin(true);
+            }
+        } catch (error) {
+            if (error === 'noAuth') {
+                navigate("/login");
+                setIsAdmin(false);
+            }
         }
     }
     const getStreamsStatistic = async () => {
-        const response = await getRequestWithAuth('/twitch/reports/stream');
-        if (response.status === 403) {
-            setDetail('Forbidden');
-            setIsAdmin(false);
-        }
-        const data = await response.json();
+        try {
+            const response = await getRequestWithAuth('/twitch/reports/stream');
+            if (response.status === 403) {
+                setDetail('Forbidden');
+                setIsAdmin(false);
+            }
+            const data = await response.json();
 
-        setMostPopularGame(data.most_popular_games);
-        setStreamsAmount(data.streams_amount);
+            setMostPopularGame(data.most_popular_games);
+            setStreamsAmount(data.streams_amount);
+        } catch (error) {
+
+        }
     }
 
     const getNotificationStatistic = async () => {
-        const response = await getRequestWithAuth('/twitch/reports/notification');
-        if (response.status === 403) {
-            setDetail('Forbidden');
-            setIsAdmin(false);
+        try {
+            const response = await getRequestWithAuth('/twitch/reports/notification');
+            if (response.status === 403) {
+                setDetail('Forbidden');
+                setIsAdmin(false);
+            }
+            const data = await response.json();
+            setNotificationsAmount(data.notifications_amount);
+            setEmailHostUser(data.email_host_user);
+            setSubscriptionStreams(data.started_subscribed_streams);
+        } catch (error) {
         }
-        const data = await response.json();
-        setNotificationsAmount(data.notifications_amount);
-        setEmailHostUser(data.email_host_user);
-        setSubscriptionStreams(data.started_subscribed_streams);
     }
 
     const handleFileChange = (event) => {
@@ -75,9 +92,17 @@ const AdminComponent = () => {
         if (dump) {
             formData.append('file', dump, 'dump.json');
             console.log(formData);
-            const response = await bodyRequestWithAuth('/auth/dump', formData, "POST", true, true);
-            if (response.status === 200) {
-                setRestoreStatus(true);
+            try {
+                const response = await bodyRequestWithAuth('/auth/dump', formData, "POST", true, true);
+                if (response.status === 200) {
+                    setRestoreStatus(true);
+                }
+                else {
+                    alert("bad data")
+                }
+            }
+            catch (error){
+                alert("bad data");
             }
         }
     }

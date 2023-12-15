@@ -168,7 +168,7 @@ class AuthRelationalManager(RelationalManager):
         try:
             users_dump_from_file: dict = json.loads(file.read())
         except json.JSONDecodeError:
-            return
+            raise HTTPException(status_code=400, detail="Invalid JSON")
         print(users_dump_from_file)
         admins_ids = users_dump_from_file.get('admins_ids', [])
         for user in users_dump_from_file.get('users', []):
@@ -520,7 +520,7 @@ class TwitchRelationalManager(RelationalManager):
             )
         )
         result = await self.db.execute(streamers_favourite_game)
-        if target_games:
+        if target_games is not None:
             target_games_ids = [game.id for game in target_games]
             return [(res[1], res[2]) for res in result.all() if res[2] in target_games_ids]
         else:
@@ -604,6 +604,7 @@ class TwitchRelationalManager(RelationalManager):
         )
         notifications_amount = result.scalars().one()
         return notifications_amount if notifications_amount else 0
+    
     async def get_today_streams_amount(self) -> int:
         today, start_of_day, end_of_day = self.today()
         result = await self.db.execute(
