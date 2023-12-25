@@ -15,7 +15,5 @@ RUN apt-get update && apt-get install -y --no-install-recommends gcc
 
 RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --system
 
-ENV PYTHONPATH "${PYTHONPATH}:/app"
-
 COPY . /app/
 
