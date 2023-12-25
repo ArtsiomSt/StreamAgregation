@@ -1,0 +1,40 @@
+{
+  "register": {
+    "request": {
+      "username": "string",
+      "email": "user@testmail.com",
+      "first_name": "First",
+      "last_name": "Last",
+      "password": "str123ui1923uhjkdhsakjhldk"
+    },
+    "response": {
+      "id": 2,
+      "username": "string",
+      "email": "user@testmail.com",
+      "first_name": "First",
+      "last_name": "Last",
+      "is_email_verified": false,
+      "hashed_password": "string"
+    }
+  },
+  "login": {
+    "request": {
+      "email": "user@testmail.com",
+      "password": "str123ui1923uhjkdhsakjhldk"
+    },
+    "response": {
+      "access_token": "string",
+      "refresh_token": "string"
+    }
+  },
+  "me": {
+    "response": {
+      "id": 2,
+      "username": "string",
+      "email": "user@testmail.com",
+      "first_name": "First",
+      "last_name": "Last",
+      "is_email_verified": false
+    }
+  }
+}

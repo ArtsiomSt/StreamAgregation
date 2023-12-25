@@ -1,0 +1,409 @@
+{
+  "streams": {
+    "mock-response": [
+      {
+        "id": null,
+        "created_at": "2023-10-11T09:00:25.596304",
+        "twitch_id": 40045466533,
+        "user": {
+          "id": null,
+          "created_at": "2012-09-08T06:53:10Z",
+          "twitch_user_id": 36029255,
+          "login": "riotgames",
+          "display_name": "Riot Games",
+          "type": "",
+          "description": "Welcome to the Riot Games channel, home of LoL Esports and other livestreams related to our games. For LoL Esports broadcasts, schedules, standings and advanced viewing features, head to http://lolesports.com.",
+          "view_count": 0,
+          "broadcaster_type": "partner",
+          "email": ""
+        },
+        "twitch_game_id": "21779",
+        "game_name": "League of Legends",
+        "stream_title": "BDS vs TW | Worlds Play-In Stage Day 2",
+        "viewer_count": 105077,
+        "tags": [
+          "Esports",
+          "English"
+        ]
+      },
+      {
+        "id": null,
+        "created_at": "2023-10-11T09:00:25.596304",
+        "twitch_id": 41226516056,
+        "user": {
+          "id": null,
+          "created_at": "2015-05-27T11:21:07Z",
+          "twitch_user_id": 92038375,
+          "login": "caedrel",
+          "display_name": "Caedrel",
+          "type": "",
+          "description": "he cancelled it",
+          "view_count": 0,
+          "broadcaster_type": "partner",
+          "email": ""
+        },
+        "twitch_game_id": "21779",
+        "game_name": "League of Legends",
+        "stream_title": "🔴BDS VS TEAM WHALESSSSSSS WORLDS COSTREAM🔴 !discord !socials !youtube !pobox !displate !giveaway",
+        "viewer_count": 25577,
+        "tags": [
+          "xdd",
+          "Washed",
+          "degen",
+          "English",
+          "adhd",
+          "badexample"
+        ]
+      },
+      {
+        "id": null,
+        "created_at": "2023-10-11T09:00:25.596304",
+        "twitch_id": 42893666587,
+        "user": {
+          "id": null,
+          "created_at": "2012-04-28T03:03:56Z",
+          "twitch_user_id": 30104304,
+          "login": "maximilian_dood",
+          "display_name": "Maximilian_DOOD",
+          "type": "",
+          "description": "Maximilians Livestream Of Hype! Modern fighting games, classic fighting games, playthrus and YoVideogames on the weekend. MY DOODS!",
+          "view_count": 0,
+          "broadcaster_type": "partner",
+          "email": ""
+        },
+        "twitch_game_id": "653624336",
+        "game_name": "Lies of P",
+        "stream_title": "THE END OF P...Lies Of P (10-10)",
+        "viewer_count": 9276,
+        "tags": [
+          "marvel",
+          "mortal",
+          "kombat",
+          "killerinstinct",
+          "capcom",
+          "finalfantasyvii",
+          "streetfighter",
+          "max",
+          "maximilian",
+          "dood"
+        ]
+      },
+      {
+        "id": null,
+        "created_at": "2023-10-11T09:00:25.596304",
+        "twitch_id": 49466981581,
+        "user": {
+          "id": null,
+          "created_at": "2015-04-19T04:47:51Z",
+          "twitch_user_id": 88946548,
+          "login": "aceu",
+          "display_name": "aceu",
+          "type": "",
+          "description": "bowl",
+          "view_count": 0,
+          "broadcaster_type": "partner",
+          "email": ""
+        },
+        "twitch_game_id": "511224",
+        "game_name": "Apex Legends",
+        "stream_title": "highschool reunion",
+        "viewer_count": 9087,
+        "tags": [
+          "buh",
+          "English"
+        ]
+      },
+      {
+        "id": null,
+        "created_at": "2023-10-11T09:00:25.596304",
+        "twitch_id": 42892260171,
+        "user": {
+          "id": null,
+          "created_at": "2017-02-16T16:22:59Z",
+          "twitch_user_id": 147927227,
+          "login": "aspen",
+          "display_name": "Aspen",
+          "type": "",
+          "description": "I play a lot of Overwatch",
+          "view_count": 0,
+          "broadcaster_type": "partner",
+          "email": ""
+        },
+        "twitch_game_id": "515025",
+        "game_name": "Overwatch 2",
+        "stream_title": "[DROPS] NEW SEASON GRIND TOP 500. FNAF MOVIE COUNTDOWN: 17 DAYS",
+        "viewer_count": 6993,
+        "tags": [
+          "English",
+          "DropsEnabled"
+        ]
+      },
+      {
+        "id": null,
+        "created_at": "2023-10-11T09:00:25.596304",
+        "twitch_id": 49468519981,
+        "user": {
+          "id": null,
+          "created_at": "2011-10-23T13:43:13Z",
+          "twitch_user_id": 25653002,
+          "login": "iwdominate",
+          "display_name": "IWDominate",
+          "type": "",
+          "description": "Former LCS Player and Current LCS/LPL Co-Streamer and LEC Liveviewer",
+          "view_count": 0,
+          "broadcaster_type": "partner",
+          "email": ""
+        },
+        "twitch_game_id": "21779",
+        "game_name": "League of Legends",
+        "stream_title": "🔴Worlds Costream Day 2 : BDS VS WHALES🔴#Worlds Joined by The Sack and 1200 LP Wunder",
+        "viewer_count": 5752,
+        "tags": [
+          "Intellectual",
+          "Elderly",
+          "grumpy",
+          "ancient",
+          "fossil",
+          "English",
+          "Crack",
+          "TheSack"
+        ]
+      },
+      {
+        "id": null,
+        "created_at": "2023-10-11T09:00:25.596304",
+        "twitch_id": 42893989547,
+        "user": {
+          "id": null,
+          "created_at": "2013-02-03T23:47:15Z",
+          "twitch_user_id": 40017619,
+          "login": "doublelift",
+          "display_name": "Doublelift",
+          "type": "",
+          "description": "",
+          "view_count": 0,
+          "broadcaster_type": "partner",
+          "email": ""
+        },
+        "twitch_game_id": "21779",
+        "game_name": "League of Legends",
+        "stream_title": "🔴WORLDS COSTREAM DAY 2🔴former NA airport winless any% record holder🔴#Worlds2023🔴",
+        "viewer_count": 5560,
+        "tags": [
+          "English"
+        ]
+      },
+      {
+        "id": null,
+        "created_at": "2023-10-11T09:00:25.596304",
+        "twitch_id": 41226578600,
+        "user": {
+          "id": null,
+          "created_at": "2013-07-27T20:40:05Z",
+          "twitch_user_id": 46717011,
+          "login": "olofmeister",
+          "display_name": "olofmeister",
+          "type": "",
+          "description": "",
+          "view_count": 0,
+          "broadcaster_type": "partner",
+          "email": ""
+        },
+        "twitch_game_id": "32399",
+        "game_name": "Counter-Strike",
+        "stream_title": "🟠 NEW RATING SYSTEM 🟠w/ @f0rest; @tazg5; @glacecs & @get_right 🟠| !clan !discord !tradeit !faceitdrops !giveaway 🟠",
+        "viewer_count": 4448,
+        "tags": [
+          "PLAYING",
+          "pro",
+          "English",
+          "beast",
+          "twotimemajorwinner",
+          "CS2",
+          "csgo"
+        ]
+      },
+      {
+        "id": null,
+        "created_at": "2023-10-11T09:00:25.596304",
+        "twitch_id": 42893387163,
+        "user": {
+          "id": null,
+          "created_at": "2014-09-09T18:31:32Z",
+          "twitch_user_id": 70880222,
+          "login": "smoke",
+          "display_name": "Smoke",
+          "type": "",
+          "description": "Smoke plays First-Person Shooters and open-world survival games like DayZ. His focus is to provide an immersive experience for the viewer in a clean environment. Smoke enjoys building a community of like-minded players.",
+          "view_count": 0,
+          "broadcaster_type": "partner",
+          "email": ""
+        },
+        "twitch_game_id": "65632",
+        "game_name": "DayZ",
+        "stream_title": "DayZ Survival - Day 1285",
+        "viewer_count": 4323,
+        "tags": [
+          "English"
+        ]
+      },
+      {
+        "id": null,
+        "created_at": "2023-10-11T09:00:25.596304",
+        "twitch_id": 40707215255,
+        "user": {
+          "id": null,
+          "created_at": "2011-12-02T19:14:29Z",
+          "twitch_user_id": 26513896,
+          "login": "imls",
+          "display_name": "imls",
+          "type": "",
+          "description": "Im LS.",
+          "view_count": 0,
+          "broadcaster_type": "partner",
+          "email": ""
+        },
+        "twitch_game_id": "21779",
+        "game_name": "League of Legends",
+        "stream_title": "🟢FLY LS | WORLDS DAY 2 PLAY-INS w/ REVEN/SOLARBACCA + TIERLIST MAKING #Worlds23 | !TIKTOK | !Patreon | !clips",
+        "viewer_count": 4229,
+        "tags": [
+          "Autism",
+          "English"
+        ]
+      },
+      {
+        "id": null,
+        "created_at": "2023-10-11T09:00:25.596304",
+        "twitch_id": 400483592,
+        "user": {
+          "id": null,
+          "created_at": "2021-05-25T18:01:40Z",
+          "twitch_user_id": 690776762,
+          "login": "veliainn",
+          "display_name": "VeliaInn",
+          "type": "",
+          "description": "Listen to the New World Soundtrack 24/7. Supported by Amazon Games.",
+          "view_count": 0,
+          "broadcaster_type": "affiliate",
+          "email": ""
+        },
+        "twitch_game_id": "",
+        "game_name": "",
+        "stream_title": "New World Bonfire",
+        "viewer_count": 3778,
+        "tags": [
+          "English",
+          "Charity",
+          "Rerun"
+        ]
+      },
+      {
+        "id": null,
+        "created_at": "2023-10-11T09:00:25.596304",
+        "twitch_id": 42893111067,
+        "user": {
+          "id": null,
+          "created_at": "2016-04-28T00:11:34Z",
+          "twitch_user_id": 122888997,
+          "login": "willneff",
+          "display_name": "willneff",
+          "type": "",
+          "description": "Will Neff. If I don’t make you laugh that’s on you, don’t put your baggage on me. ",
+          "view_count": 0,
+          "broadcaster_type": "partner",
+          "email": ""
+        },
+        "twitch_game_id": "512923",
+        "game_name": "Baldurs Gate 3",
+        "stream_title": "Big boi stream guy",
+        "viewer_count": 3737,
+        "tags": [
+          "English"
+        ]
+      },
+      {
+        "id": null,
+        "created_at": "2023-10-11T09:00:25.596304",
+        "twitch_id": 41928622825,
+        "user": {
+          "id": null,
+          "created_at": "2009-07-15T03:02:41Z",
+          "twitch_user_id": 7236692,
+          "login": "dansgaming",
+          "display_name": "DansGaming",
+          "type": "",
+          "description": "Dan is secretly saving the universe one video game world at a time! Let me help you as we explore a vast variety of video games together. Live around Noon Eastern USA time each day!",
+          "view_count": 0,
+          "broadcaster_type": "partner",
+          "email": ""
+        },
+        "twitch_game_id": "490537",
+        "game_name": "Layers of Fear",
+        "stream_title": "12th Annual HORROR MONTH! 24/7 Marathon with Mostly Horror Games! !Schedule !MERCH !Displate !VODS",
+        "viewer_count": 3737,
+        "tags": [
+          "TwitchOG",
+          "DansGame",
+          "Emotes",
+          "English",
+          "Variety",
+          "Horror",
+          "halloween",
+          "scarygames",
+          "Marathon",
+          "HorrorMonth"
+        ]
+      },
+      {
+        "id": null,
+        "created_at": "2023-10-11T09:00:25.596304",
+        "twitch_id": 49464720109,
+        "user": {
+          "id": null,
+          "created_at": "2019-03-27T00:02:59Z",
+          "twitch_user_id": 426101693,
+          "login": "w0n23",
+          "display_name": "w0n23",
+          "type": "",
+          "description": "WE CHILLING",
+          "view_count": 0,
+          "broadcaster_type": "partner",
+          "email": ""
+        },
+        "twitch_game_id": "417528",
+        "game_name": "Albion Online",
+        "stream_title": "DROPS ✔️DEATHGIVERS",
+        "viewer_count": 3631,
+        "tags": [
+          "English",
+          "DropsEnabled"
+        ]
+      },
+      {
+        "id": null,
+        "created_at": "2023-10-11T09:00:25.596304",
+        "twitch_id": 40045694101,
+        "user": {
+          "id": null,
+          "created_at": "2016-03-09T00:11:06Z",
+          "twitch_user_id": 118223829,
+          "login": "boschmerchant",
+          "display_name": "BoschMerchant",
+          "type": "",
+          "description": "The current Lord of Bosch, trying to save the world one stream at a time",
+          "view_count": 0,
+          "broadcaster_type": "partner",
+          "email": ""
+        },
+        "twitch_game_id": "32982",
+        "game_name": "Grand Theft Auto V",
+        "stream_title": "Anthony Shamrock Sports Murphy !TIKTOK !socials !streamteam !cyberpower",
+        "viewer_count": 2997,
+        "tags": [
+          "English"
+        ]
+      }
+    ]
+  }
+}

@@ -23,11 +23,20 @@ class RedisCacheManager:
         self.redis = Redis(host=settings.redis_host, port=int(settings.redis_port))
         self.is_active = True
 
-    async def save_to_cache(self, key: Any, ttl: int, value: Any) -> bool:
-        if isinstance(value, BaseModel) or isinstance(value, dict):
-            dict_from_object = value.model_dump() if isinstance(value, BaseModel) else value
-            replace_basemodel_unserializable_fields(dict_from_object)
-            value = dict_from_object
+    async def save_to_cache(self, key: Any, ttl: int, value: Any, many: bool = False) -> bool:
+        if not many:
+            if isinstance(value, BaseModel) or isinstance(value, dict):
+                dict_from_object = value.model_dump() if isinstance(value, BaseModel) else value
+                replace_basemodel_unserializable_fields(dict_from_object)
+                value = dict_from_object
+        else:
+            new_value = []
+            for item in value:
+                if isinstance(item, BaseModel) or isinstance(item, dict):
+                    dict_from_object = item.model_dump() if isinstance(item, BaseModel) else item
+                    replace_basemodel_unserializable_fields(dict_from_object)
+                    new_value.append(dict_from_object)
+            value = new_value
         value = json.dumps(value).encode("utf-8")
         return await self.redis.setex(json.dumps(key).encode("utf-8"), ttl, value)
 
@@ -89,7 +98,7 @@ def get_paginated_dict(
         if key in paginate_fields and type(value) == list:
             if len(value) < paginate_by:
                 raise PaginationException(detail=f"Maximum paginate_by value is {len(value)}")
-            data[key] = value[paginate_by * page_num : paginate_by * (page_num + 1)]
+            data[key] = value[paginate_by * page_num: paginate_by * (page_num + 1)]
         elif key in paginate_fields and type(value) == dict:
             get_paginated_dict(value, paginate_fields, paginate_by, page_num)
     return data

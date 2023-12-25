@@ -1,15 +1,12 @@
-from auth.routers import auth_router
+from config import Settings
 from db import twitch_db
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 from twitch.routers import twitch_router
 
-from .config import Settings
-
 app = FastAPI()
 app.include_router(twitch_router, tags=["twitch"])
-app.include_router(auth_router, tags=["auth"])
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,13 +18,12 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup():
-    settings = Settings()
-    await twitch_db.connect_to_database(path=settings.mongo_url, db_name=settings.twitch_db_name)
+    pass
 
 
 @app.on_event("shutdown")
 async def shutdown():
-    await twitch_db.close_database_connection()
+    pass
 
 
 @app.exception_handler(Exception)
@@ -47,3 +43,9 @@ async def handle_python_exceptions(request, exc):
 @app.get("/")
 def main():
     return {"message": "success"}
+
+
+@app.get('/task')
+async def task_end():
+    task = divide.delay(1, 2)
+    print(task.state)
