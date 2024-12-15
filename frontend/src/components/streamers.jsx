@@ -5,6 +5,7 @@ import GamesComponent from "./games";
 import Popup from "../utils/popup";
 import NavBar from "./navbar";
 import '../styles/table.css';
+import '../styles/search.css'
 
 
 const StreamersComponent = () => {
@@ -131,28 +132,34 @@ const StreamersComponent = () => {
         <div>
             <NavBar/>
             <div>
-                <form onSubmit={handleSearch}>
-                    <div>
-                        <label>Streamer: </label>
-                        <input
-                            type="search"
-                            placeholder="streamer"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            required={false}
-                        />
+                <form onSubmit={handleSearch} className="search-form">
+                    <div className="inputs-row">
+                        <div className="search-field">
+                            <label className="search-label">Streamer: </label>
+                            <input
+                                type="search"
+                                placeholder="Enter streamer name"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="search-input"
+                                required={false}
+                            />
+                        </div>
+
+                        <div className="search-field">
+                            <label className="search-label">Game: </label>
+                            <input
+                                type="search"
+                                placeholder="Enter game title"
+                                value={searchGame}
+                                onChange={(e) => setSearchGame(e.target.value)}
+                                className="search-input"
+                                required={false}
+                            />
+                        </div>
+
+                        <button type="submit" className="search-button">Search</button>
                     </div>
-                    <div>
-                        <label>Game: </label>
-                        <input
-                            type="search"
-                            placeholder="game"
-                            value={searchGame}
-                            onChange={(e) => setSearchGame(e.target.value)}
-                            required={false}
-                        />
-                    </div>
-                    <button type="submit">Search</button>
                 </form>
             </div>
             <br/>

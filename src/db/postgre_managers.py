@@ -169,7 +169,6 @@ class AuthRelationalManager(RelationalManager):
             users_dump_from_file: dict = json.loads(file.read())
         except json.JSONDecodeError:
             raise HTTPException(status_code=400, detail="Invalid JSON")
-        print(users_dump_from_file)
         admins_ids = users_dump_from_file.get('admins_ids', [])
         for user in users_dump_from_file.get('users', []):
             try:
@@ -392,8 +391,19 @@ class TwitchRelationalManager(RelationalManager):
                             page_num: int = 0,
                             search: str = '',
                             no_pagination: bool = False) -> list[TwitchUserScheme]:
-        query = select(TwitchUser).where(
-            or_(TwitchUser.display_name.like(f'%{search}%'), TwitchUser.login.like(f'%{search}%')))
+        query = (
+            select(TwitchUser.id.label("tid"), func.count(TwitchUser.id).label("idc"))
+            .join(UserSubscription, UserSubscription.twitch_db_user_id == TwitchUser.id)
+            .where(
+            or_(TwitchUser.display_name.like(f'%{search}%'), TwitchUser.login.like(f'%{search}%'))
+        )
+            .group_by(TwitchUser.id)
+        ).subquery()
+        query = (
+            select(TwitchUser, query.c.idc)
+            .join(query, TwitchUser.id == query.c.tid, isouter=True)
+            .order_by(query.c.idc)
+        )
         if no_pagination:
             if not search:
                 raise OverflowError("Unable to get all streamer without filter")
@@ -533,7 +543,7 @@ class TwitchRelationalManager(RelationalManager):
         streamers_with_that_game = await self.get_streamers_game(target_games=users_games)
         streamers_id_with_that_game = [res[0] for res in streamers_with_that_game]
         users_subscribed_streamers = await self.db.execute(
-            select(UserSubscription.twitch_db_user_id).where(UserSubscription.user_id == 3)
+            select(UserSubscription.twitch_db_user_id).where(UserSubscription.user_id == user.id)
         )
         result = await self.db.execute(
             select(TwitchUser)

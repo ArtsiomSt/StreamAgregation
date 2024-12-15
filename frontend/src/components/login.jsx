@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import {useNavigate} from "react-router-dom";
 import NavBar from "./navbar"
+import "../styles/login.css"
 
 
 const LoginForm = () => {
@@ -45,34 +46,38 @@ const LoginForm = () => {
     };
     return (
         <div>
-            <NavBar />
-            <form onSubmit={handleLogin}>
-                <div>
-                    <label>Email: </label>
+            <NavBar/>
+            <form onSubmit={handleLogin} className="login-form">
+                <div className="input-field">
+                    <label className="input-label">Email: </label>
                     <input
                         type="email"
                         placeholder="Email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required={true}
+                        className="input-input"
                     />
                 </div>
-                <div>
-                    <label>Password: </label>
+
+                <div className="input-field">
+                    <label className={"input-label"}>Password: </label>
                     <input
                         type="password"
                         placeholder="Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required={true}
+                        className="input-input"
                     />
                 </div>
-                <button type="submit">login</button>
+
+                <button type="submit" className={"input-button"}>Login</button>
                 <h3>{detail}</h3>
+                <div>
+                    <h6>Don't have account? <button onClick={handleRegisterRedirect} className={"input-button"}>Register</button></h6>
+                </div>
             </form>
-            <div>
-                <h6>Don't have account? <button onClick={handleRegisterRedirect}>Register</button></h6>
-            </div>
         </div>
     );
 };

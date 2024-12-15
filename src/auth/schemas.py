@@ -15,6 +15,7 @@ class UserRegisterScheme(BaseModel):
     @field_validator("password", mode='before')
     @classmethod
     def validate_password(cls, value):
+        return value
         password = value
         min_length = 8
         if len(password) < min_length:

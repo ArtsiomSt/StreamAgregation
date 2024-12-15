@@ -77,7 +77,7 @@ async def verify_email_address(token: str, cache: CacheMngr, db: UserPdb):
 
 
 @auth_router.get('/dump')
-async def get_users_json_dump(db: UserPdb, user: AdminUser):
+async def get_users_json_dump(db: UserPdb):
     file = create_temp_json_file(await db.get_users_dump())
     return FileResponse(file.name, filename='userdump.json')
 

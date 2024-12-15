@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import {useNavigate} from "react-router-dom";
 import NavBar from "./navbar"
+import "../styles/login.css"
 
 
 const RegisterForm = () => {
@@ -50,58 +51,69 @@ const RegisterForm = () => {
     return (
         <div>
             <NavBar/>
-            <form onSubmit={handleRegister}>
-                <div>
-                    <label>Email: </label>
+            <form onSubmit={handleRegister} className={"login-form"}>
+                <div className="input-field">
+                    <label className="input-label">Email: </label>
                     <input
                         type="email"
                         placeholder="Email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required={true}
+                        className="input-input"  // Added style class
                     />
                 </div>
-                <div>
-                    <label>Password: </label>
+
+                <div className="input-field">
+                    <label className="input-label">Password: </label>
                     <input
                         type="password"
                         placeholder="Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required={true}
+                        className="input-input"  // Added style class
                     />
                 </div>
-                <div>
-                    <label>Username: </label>
+
+                <div className="input-field">
+                    <label className="input-label">Username: </label>
                     <input
                         type="text"
-                        placeholder="first name"
+                        placeholder="First name"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         required={true}
+                        className="input-input"  // Added style class
                     />
                 </div>
-                <div>
-                    <label>First Name: </label>
+
+                <div className="input-field">
+                    <label className="input-label">First Name: </label>
                     <input
                         type="text"
-                        placeholder="first name"
+                        placeholder="First name"
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
+                        className="input-input"  // Added style class
                     />
                 </div>
-                <div>
-                    <label>First Name: </label>
+
+                <div className="input-field">
+                    <label className="input-label">Last Name: </label>
                     <input
                         type="text"
-                        placeholder="last name"
+                        placeholder="Last name"
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
+                        className="input-input"  // Added style class
                     />
                 </div>
-                <button type="submit">Register</button>
+
+                <button type="submit" className="input-button">Register</button>
                 <h3>{detail}</h3>
             </form>
+
         </div>
     );
 };
