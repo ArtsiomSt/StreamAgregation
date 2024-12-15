@@ -1,0 +1,49 @@
+.search-form {
+  display: flex;
+  flex-direction: column;       /* Stack form fields vertically */
+  gap: 20px;                    /* Space between rows */
+    margin-left: 50px;
+}
+
+/* Styling for the row that contains inputs and button */
+.inputs-row {
+  display: flex;
+  gap: 15px;                    /* Space between elements in the row */
+  align-items: center;          /* Align the elements vertically in the row */
+}
+
+/* Styling for individual search fields */
+.search-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;                     /* Space between label and input */
+}
+
+.search-label {
+  font-size: 0.9rem;
+  color: #333;
+  font-weight: bold;
+}
+
+.search-input {
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 200px; /* Adjust input width */
+}
+
+.search-button {
+  padding: 10px 15px;
+    margin-top: 25px;
+  font-size: 1rem;
+  background-color: #4c5caf;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.search-button:hover {
+  background-color: #4c5caf;  /* Button hover effect */
+}
