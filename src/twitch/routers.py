@@ -5,12 +5,9 @@ from uuid import uuid4
 
 from application.cache import RedisCacheManager
 from application.dependecies import get_cache_manager
-from application.schemas import ResponseFromDb
-from auth.dependencis import CurrentUser
+from auth.dependencis import CurrentUser, AdminUser
 from brokers.producer import producer
 from core.enums import ObjectStatus
-from db import get_twitch_database
-from db.database_managers import TwitchDatabaseManager
 from db.postgre_managers import TwitchRelationalManager
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
@@ -18,7 +15,16 @@ from pydantic import ValidationError
 
 from .config import TwitchSettings
 from .dependencies import get_twitch_parser, get_twitch_pdb
-from .schemas import TaskStatus, TwitchStreamParams, TwitchUserParams
+from .schemas import (
+    TaskStatus,
+    TwitchStreamParams,
+    TwitchGame,
+    TwitchUser,
+    TwitchStreamerParams,
+    SearchScheme,
+    NotificationStatistics,
+    StreamStatistics
+)
 from .service import TwitchParser
 from .tasks import get_live_subscribed_streams
 
@@ -26,7 +32,6 @@ twitch_router = APIRouter(prefix="/twitch")
 
 
 TwitchParserObject = Annotated[TwitchParser, Depends(get_twitch_parser)]
-TwitchDb = Annotated[TwitchDatabaseManager, Depends(get_twitch_database)]
 TwitchPdb = Annotated[TwitchRelationalManager, Depends(get_twitch_pdb)]
 CacheMngr = Annotated[RedisCacheManager, Depends(get_cache_manager)]
 settings = TwitchSettings()
@@ -105,22 +110,20 @@ async def check_task_status(task_id: str, cache: CacheMngr):
     return TaskStatus(task_id=task_id, task_status=ObjectStatus.NOT_EXISTS.name)
 
 
-@twitch_router.get("/user", response_model=ResponseFromDb)
-async def get_parsed_users(db: TwitchDb, params: TwitchUserParams = Depends()):
-    """View that stands for getting users from parsed streams from database"""
-
-    users = await db.get_users_by_filter({}, paginate_by=params.paginate_by, page_num=params.page_num)
-    return ResponseFromDb(
-        status=ObjectStatus.PROCESSED.name,
-        data=users,
-        paginate_by=params.paginate_by,
-        page_num=params.page_num,
-    )
-
-
 @twitch_router.get("/users/subscribe/{twitch_user_id}")
 async def subscribe_to_twitch_user(twitch_user_id: int, db: TwitchPdb, user: CurrentUser):
+    if not user.is_email_verified:
+        raise HTTPException(detail='Email is not verified', status_code=403)
     result = await db.subscribe_user_to_streamer(user, twitch_user_id)
+    if result:
+        return JSONResponse({"detail": "subscribed"}, status_code=200)
+    else:
+        raise HTTPException(detail="Unknown error", status_code=500)
+
+
+@twitch_router.delete("/users/subscribe/{twitch_user_id}")
+async def unsubscribe_from_twitch_user(twitch_user_id: int, db: TwitchPdb, user: CurrentUser):
+    result = await db.unsubscribe_user_from_streamer(user, twitch_user_id)
     if result:
         return JSONResponse({"detail": "subscribed"}, status_code=200)
     else:
@@ -131,14 +134,80 @@ async def subscribe_to_twitch_user(twitch_user_id: int, db: TwitchPdb, user: Cur
 async def send_notifications(db: TwitchPdb, parser: TwitchParserObject):
     await get_live_subscribed_streams(db, parser)
 
+
 @twitch_router.get('/reports/popular')
 async def get_most_popular_streamer(db: TwitchPdb):
-    pass
+    return {"detail": "Not implemented"}
 
-@twitch_router.get("/test")
-async def test_twitch(db: TwitchPdb):
-    res = await db.get_parsed_streams()
-    for item in res:
-        print(item)
-    # new test string
-    return {"message": "success"}
+
+@twitch_router.get('/games/most_popular')
+async def get_most_popular_games(db: TwitchPdb) -> list[TwitchGame]:
+    return await db.get_most_popular_twitch_games()
+
+
+@twitch_router.post('/streamers')
+async def get_streamers(db: TwitchPdb, params: TwitchStreamerParams) -> list[TwitchUser]:
+    print(params)
+    return await db.get_streamers(params.paginate_by, params.page_num, params.search_streamer)
+
+
+@twitch_router.post('/user/subscriptions')
+async def get_users_subscriptions(db: TwitchPdb, user: CurrentUser, params: TwitchStreamerParams) -> list[TwitchUser]:
+    return await db.get_users_subscriptions(user, params.paginate_by, params.page_num, params.search_streamer)
+
+
+@twitch_router.get('/streamers/popular')
+async def get_popular_streamers(db: TwitchPdb) -> list[TwitchUser]:
+    return await db.get_most_popular_streamers()
+
+
+@twitch_router.get('/user/recommendations')
+async def get_users_recommendations(db: TwitchPdb, user: CurrentUser, cache: CacheMngr) -> list[TwitchUser]:
+    key_for_cache = f'{user.id}-reccom'
+    cached_recommendations = await cache.get_object_from_cache(key_for_cache)
+    if cached_recommendations is not None:
+        return cached_recommendations
+    users_recommendations = await db.get_users_recommendations(user)
+    await cache.save_to_cache(key_for_cache, 300, users_recommendations, True)
+    return users_recommendations
+
+
+@twitch_router.get('/user/games')
+async def get_my_top_games(db: TwitchPdb, user: CurrentUser) -> list[TwitchGame]:
+    return await db.get_users_favourite_games(user)
+
+
+@twitch_router.post('/games/streamers')
+async def find_streamers_by_game(db: TwitchPdb, search: SearchScheme, cache: CacheMngr) -> list[TwitchUser]:
+    target_streamers = None
+    if search.search_streamer:
+        target_streamers = await db.get_streamers(search=search.search_streamer, no_pagination=True)
+    target_games = await db.get_games(100, 0, search.search_value)
+    if target_streamers:
+        await cache.save_to_cache({'search-game': search.search_value}, 300, target_games[:5], many=True)
+    return await db.get_streamers_by_game(target_games, target_streamers, search.paginate_by, search.page_num)
+
+
+@twitch_router.post('/games/query')
+async def find_games_by_query(db: TwitchPdb, search: SearchScheme, cache: CacheMngr) -> list[TwitchGame]:
+    target_games = await cache.get_object_from_cache({'search-game': search.search_value})
+    if not target_games:
+        target_games = await db.get_games(100, 0, search.search_value)
+        await cache.save_to_cache({'search-game': search.search_value}, 300, target_games[:5], many=True)
+    return target_games
+
+
+@twitch_router.get('/reports/notification')
+async def get_notifications_report(db: TwitchPdb) -> NotificationStatistics:
+    return NotificationStatistics(
+        started_subscribed_streams=await db.get_today_subscribed_streams_amount(),
+        notifications_amount=await db.get_today_notifications_amount()
+    )
+
+
+@twitch_router.get('/reports/stream')
+async def get_stream_report(db: TwitchPdb) -> StreamStatistics:
+    return StreamStatistics(
+        streams_amount=await db.get_today_streams_amount(),
+        most_popular_games=await db.get_today_most_popular_game()
+    )

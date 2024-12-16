@@ -394,15 +394,14 @@ class TwitchRelationalManager(RelationalManager):
         query = (
             select(TwitchUser.id.label("tid"), func.count(TwitchUser.id).label("idc"))
             .join(UserSubscription, UserSubscription.twitch_db_user_id == TwitchUser.id)
-            .where(
-            or_(TwitchUser.display_name.like(f'%{search}%'), TwitchUser.login.like(f'%{search}%'))
-        )
-            .group_by(TwitchUser.id)
+            .where(or_(TwitchUser.display_name.like(f'%{search}%'), TwitchUser.login.like(f'%{search}%'))
+        ).group_by(TwitchUser.id)
         ).subquery()
         query = (
             select(TwitchUser, query.c.idc)
             .join(query, TwitchUser.id == query.c.tid, isouter=True)
             .order_by(query.c.idc)
+            .where(or_(TwitchUser.display_name.like(f'%{search}%'), TwitchUser.login.like(f'%{search}%')))
         )
         if no_pagination:
             if not search:
