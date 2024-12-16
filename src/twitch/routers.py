@@ -147,6 +147,7 @@ async def get_most_popular_games(db: TwitchPdb) -> list[TwitchGame]:
 
 @twitch_router.post('/streamers')
 async def get_streamers(db: TwitchPdb, params: TwitchStreamerParams) -> list[TwitchUser]:
+    print(params)
     return await db.get_streamers(params.paginate_by, params.page_num, params.search_streamer)
 
 

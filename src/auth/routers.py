@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Depends, Request, status, UploadFile, File
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.requests import Request
 
 from application.cache import RedisCacheManager
@@ -20,6 +20,7 @@ CacheMngr = Annotated[RedisCacheManager, Depends(get_cache_manager)]
 @auth_router.post("/register", response_model=ExtendedUserScheme, status_code=status.HTTP_201_CREATED)
 async def register(user_data: UserRegisterScheme, db: UserPdb):
     created_user = await db.save_one_user(user_data)
+    print("HERERE")
     return created_user
 
 
@@ -73,7 +74,7 @@ async def verify_email_address(token: str, cache: CacheMngr, db: UserPdb):
     if email is None:
         raise HTTPException(status_code=400, detail='Not valid link')
     await db.confirm_user_email(email)
-    return {"detail": "email verified"}
+    return RedirectResponse("http://localhost:3000/profile")
 
 
 @auth_router.get('/dump')

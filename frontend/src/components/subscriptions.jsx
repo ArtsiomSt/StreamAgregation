@@ -2,7 +2,7 @@ import NavBar from "./navbar";
 import React, {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {bodyRequestWithAuth, deleteRequestWithAuth} from "../utils/requests";
-import {get} from "axios";
+import "../styles/search.css";
 
 
 const SubscriptionsComponent = () => {
@@ -64,39 +64,48 @@ const SubscriptionsComponent = () => {
         <div>
             <NavBar/>
             <div>
-                <form onSubmit={handleSearch}>
-                    <div>
-                        <label>Search: </label>
-                        <input
-                            type="search"
-                            placeholder="streamer"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            required={false}
-                        />
+                <form onSubmit={handleSearch} className="search-form">
+                    <div className="inputs-row">
+                        <div className="search-field">
+                            <label className="search-label">Streamer: </label>
+                            <input
+                                type="search"
+                                placeholder="Enter streamer name"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="search-input"
+                                required={false}
+                            />
+                        </div>
+                        <button type="submit" className={"search-button"}>Search</button>
                     </div>
-                    <button type="submit">Search</button>
                 </form>
             </div>
             <br/>
             <h4>Streamers</h4>
             <hr/>
-            {subscriptions.map((item) => (
-                <div>
-                    <ol className="list-group list-groupd">
-                        <li className="d-flex justify-content-between align-items-start">
-                            <div className="ms-2 me-auto">
-                                <div className="fw-bold">{item.id}</div>
-                                <div className="fw-bold">Display name: {item.display_name}, login : {item.login}</div>
-                                {item.description}
-                                <hr/>
-                            </div>
-                            <a onClick={() => handleSubscription(item.twitch_user_id)} href="#"><span
-                                className="badge bg-primary rounded-pill">Unsubscribe</span></a>
-                        </li>
-                    </ol>
-                </div>
-            ))}
+            <div className='table-container'>
+                <table>
+                    <tr>
+                        <th>id</th>
+                        <th>Login</th>
+                        <th>Display Name</th>
+                        <th>Description</th>
+                        <th>Subscribe</th>
+                    </tr>
+                    {subscriptions.map((item) => (
+                        <tr>
+                            <td>{item.id}</td>
+                            <td>{item.login}</td>
+                            <td>{item.display_name}</td>
+                            <td>{item.description}</td>
+                            <td><a onClick={() => handleSubscription(item.twitch_user_id)}
+                                   href="#"><span
+                                className="badge bg-primary rounded-pill">unsubscribe</span></a></td>
+                        </tr>
+                    ))}
+                </table>
+            </div>
             <nav aria-label="Page navigation example">
                 <ul className="pagination">
                     {currentPage > 1 && (

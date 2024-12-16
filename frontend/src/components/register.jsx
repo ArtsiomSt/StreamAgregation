@@ -30,9 +30,10 @@ const RegisterForm = () => {
                     "last_name": lastName,
                 })
             });
-
-            if (response.status === 200) {
+            console.log(response.status)
+            if (response.status === 201) {
                 setDetail("Register Success");
+                console.log("EHRHEJFGJ")
                 navigate("/login")
             }
             else if (response.status === 400){
